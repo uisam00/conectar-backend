@@ -20,6 +20,7 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 import { AllConfigType } from './config/config.type';
 import { SessionModule } from './session/session.module';
 import { MailerModule } from './mailer/mailer.module';
+import { HealthModule } from './health/health.module';
 
 // <database-block>
 const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
@@ -76,6 +77,7 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
     MailModule,
     MailerModule,
     HomeModule,
+    HealthModule,
   ],
 })
 export class AppModule {}
