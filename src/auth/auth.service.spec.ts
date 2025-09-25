@@ -316,4 +316,134 @@ describe('AuthService - forgotPassword & resetPassword', () => {
   });
 });
 
+describe('AuthService - update, refreshToken e logout', () => {
+  let service: AuthService;
+  const usersServiceMock = {
+    findById: jest.fn(),
+    findByEmail: jest.fn(),
+    update: jest.fn(),
+  } as unknown as UsersService;
+  const sessionServiceMock = {
+    deleteByUserIdWithExclude: jest.fn(),
+    findById: jest.fn(),
+    update: jest.fn(),
+    deleteById: jest.fn(),
+  } as unknown as SessionService;
+  const mailServiceMock = {
+    confirmNewEmail: jest.fn(),
+  } as unknown as MailService;
+  const jwtServiceMock = {
+    signAsync: jest.fn(),
+  } as unknown as JwtService;
+  const configServiceMock = {
+    getOrThrow: jest.fn(),
+  } as unknown as ConfigService;
+
+  beforeEach(async () => {
+    jest.resetAllMocks();
+    (configServiceMock.getOrThrow as jest.Mock).mockImplementation((key: string) => {
+      const map = {
+        'auth.confirmEmailSecret': 'confirm',
+        'auth.confirmEmailExpires': '1d',
+        'auth.expires': '15m',
+        'auth.secret': 's',
+        'auth.refreshSecret': 'rs',
+        'auth.refreshExpires': '30d',
+      } as Record<string, string>;
+      return map[key] ?? 'x';
+    });
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        AuthService,
+        { provide: UsersService, useValue: usersServiceMock },
+        { provide: SessionService, useValue: sessionServiceMock },
+        { provide: MailService, useValue: mailServiceMock },
+        { provide: JwtService, useValue: jwtServiceMock },
+        { provide: ConfigService, useValue: configServiceMock },
+      ],
+    }).compile();
+
+    service = module.get<AuthService>(AuthService);
+  });
+
+  it('update should throw when current user not found', async () => {
+    (usersServiceMock.findById as jest.Mock).mockResolvedValue(null);
+    await expect(
+      service.update({ id: 1 } as any, {} as any),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+  });
+
+  it('update should throw when password provided without oldPassword', async () => {
+    (usersServiceMock.findById as jest.Mock).mockResolvedValue({ id: 1 });
+    await expect(
+      service.update({ id: 1 } as any, { password: 'new' } as any),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+  });
+
+  it('update should throw when oldPassword incorrect', async () => {
+    const bcrypt = require('bcryptjs');
+    (usersServiceMock.findById as jest.Mock).mockResolvedValue({ id: 1, password: 'hashed' });
+    (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+    await expect(
+      service.update({ id: 1 } as any, { password: 'new', oldPassword: 'old' } as any),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+  });
+
+  it('update should throw when email already exists for another user', async () => {
+    (usersServiceMock.findById as jest.Mock).mockResolvedValue({ id: 1, email: 'a@a.com' });
+    (usersServiceMock.findByEmail as jest.Mock).mockResolvedValue({ id: 2 });
+    await expect(
+      service.update({ id: 1 } as any, { email: 'b@b.com' } as any),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+  });
+
+  it('update should send confirmNewEmail when changing email', async () => {
+    (usersServiceMock.findById as jest.Mock).mockResolvedValue({ id: 1, email: 'a@a.com', password: 'h' });
+    (usersServiceMock.findByEmail as jest.Mock).mockResolvedValue(null);
+    (jwtServiceMock.signAsync as jest.Mock).mockResolvedValue('hash');
+    await service.update({ id: 1, sessionId: 10 } as any, { email: 'b@b.com', oldPassword: undefined } as any);
+    expect(mailServiceMock.confirmNewEmail).toHaveBeenCalled();
+  });
+
+  it('refreshToken should throw when session not found', async () => {
+    (sessionServiceMock.findById as jest.Mock).mockResolvedValue(null);
+    await expect(
+      service.refreshToken({ sessionId: 1, hash: 'x' } as any),
+    ).rejects.toMatchObject({ status: 401 });
+  });
+
+  it('refreshToken should throw when hash mismatch', async () => {
+    (sessionServiceMock.findById as jest.Mock).mockResolvedValue({ id: 1, hash: 'a', user: { id: 1 } });
+    await expect(
+      service.refreshToken({ sessionId: 1, hash: 'b' } as any),
+    ).rejects.toMatchObject({ status: 401 });
+  });
+
+  it('refreshToken should throw when user has no role', async () => {
+    (sessionServiceMock.findById as jest.Mock).mockResolvedValue({ id: 1, hash: 'a', user: { id: 1 } });
+    (usersServiceMock.findById as jest.Mock).mockResolvedValue({ id: 1, role: null });
+    await expect(
+      service.refreshToken({ sessionId: 1, hash: 'a' } as any),
+    ).rejects.toMatchObject({ status: 401 });
+  });
+
+  it('refreshToken should return tokens on success', async () => {
+    (sessionServiceMock.findById as jest.Mock).mockResolvedValue({ id: 1, hash: 'a', user: { id: 1 } });
+    (usersServiceMock.findById as jest.Mock).mockResolvedValue({ id: 1, role: { id: 1 } });
+    (sessionServiceMock.update as jest.Mock).mockResolvedValue(undefined);
+    (jwtServiceMock.signAsync as jest.Mock).mockResolvedValue('jwt');
+    const res = await service.refreshToken({ sessionId: 1, hash: 'a' } as any);
+    expect(res.token).toBeDefined();
+    expect(res.refreshToken).toBeDefined();
+    expect(res.tokenExpires).toBeDefined();
+  });
+
+  it('logout should delete session by id', async () => {
+    (sessionServiceMock.deleteById as jest.Mock).mockResolvedValue(undefined);
+    await service.logout({ sessionId: 5 } as any);
+    expect(sessionServiceMock.deleteById).toHaveBeenCalledWith(5);
+  });
+});
+
 
