@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.0 (2025-09-25)
+
+* chore: config para render ([5760cb4](https://github.com/uisam00/conectar-backend/commit/5760cb4))
+* feat: adiciona endpoint de health check ([aeda343](https://github.com/uisam00/conectar-backend/commit/aeda343))
+
 ## <small>1.1.1 (2025-09-25)</small>
 
 * chore: atualizar README e preparar para release v1.0.0 ([6445ffd](https://github.com/uisam00/conectar-backend/commit/6445ffd))
