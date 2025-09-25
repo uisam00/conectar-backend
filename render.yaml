@@ -91,6 +91,6 @@ projects:
         sync: false
       region: ohio
       buildCommand: npm install --include=dev && npm run build && npm prune --production;
-      startCommand: npm run start;
+      startCommand: npm run start:prod;
       healthCheckPath: /api/v1/health
       autoDeployTrigger: commit
