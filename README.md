@@ -14,8 +14,6 @@ Frontend: --inserir link--
 ## Sumário
 
 - [Funcionalidades](#funcionalidades)
-- [Contribuidores](#contribuidores)
-- [Suporte](#suporte)
 
 ## Funcionalidades
 
