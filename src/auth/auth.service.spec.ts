@@ -131,4 +131,100 @@ describe('AuthService - validateLogin', () => {
   });
 });
 
+describe('AuthService - register & confirmEmail', () => {
+  let service: AuthService;
+  const usersServiceMock = {
+    create: jest.fn(),
+    findById: jest.fn(),
+    update: jest.fn(),
+  } as unknown as UsersService;
+  const sessionServiceMock = {
+    create: jest.fn(),
+    deleteById: jest.fn(),
+  } as unknown as SessionService;
+  const mailServiceMock = {
+    userSignUp: jest.fn(),
+    confirmNewEmail: jest.fn(),
+  } as unknown as MailService;
+  const jwtServiceMock = {
+    signAsync: jest.fn(),
+    verifyAsync: jest.fn(),
+  } as unknown as JwtService;
+  const configServiceMock = {
+    getOrThrow: jest.fn(),
+  } as unknown as ConfigService;
+
+  beforeEach(async () => {
+    jest.resetAllMocks();
+    (configServiceMock.getOrThrow as jest.Mock).mockImplementation((key: string) => {
+      const map = {
+        'auth.confirmEmailSecret': 'secret_confirm',
+        'auth.confirmEmailExpires': '1d',
+      } as Record<string, string>;
+      return map[key] ?? 'x';
+    });
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        AuthService,
+        { provide: UsersService, useValue: usersServiceMock },
+        { provide: SessionService, useValue: sessionServiceMock },
+        { provide: MailService, useValue: mailServiceMock },
+        { provide: JwtService, useValue: jwtServiceMock },
+        { provide: ConfigService, useValue: configServiceMock },
+      ],
+    }).compile();
+
+    service = module.get<AuthService>(AuthService);
+  });
+
+  it('register should create user, sign confirm hash and send email', async () => {
+    (usersServiceMock.create as jest.Mock).mockResolvedValue({ id: 123 });
+    (jwtServiceMock.signAsync as jest.Mock).mockResolvedValue('hash123');
+
+    await service.register({
+      email: 'john@example.com',
+      password: 'secret',
+      firstName: 'John',
+      lastName: 'Doe',
+    } as any);
+
+    expect(usersServiceMock.create).toHaveBeenCalled();
+    expect(jwtServiceMock.signAsync).toHaveBeenCalled();
+    expect(mailServiceMock.userSignUp).toHaveBeenCalledWith(
+      expect.objectContaining({ to: 'john@example.com' }),
+    );
+  });
+
+  it('confirmEmail should throw on invalid hash', async () => {
+    (jwtServiceMock.verifyAsync as jest.Mock).mockRejectedValue(new Error('bad'));
+
+    await expect(service.confirmEmail('invalid')).rejects.toBeInstanceOf(
+      UnprocessableEntityException,
+    );
+  });
+
+  it('confirmEmail should throw not found when user missing or not inactive', async () => {
+    (jwtServiceMock.verifyAsync as jest.Mock).mockResolvedValue({ confirmEmailUserId: 1 });
+    (usersServiceMock.findById as jest.Mock).mockResolvedValue({ id: 1, status: { id: 999 } });
+
+    await expect(service.confirmEmail('ok')).rejects.toMatchObject({
+      status: 404,
+    });
+  });
+
+  it('confirmEmail should activate user and update', async () => {
+    (jwtServiceMock.verifyAsync as jest.Mock).mockResolvedValue({ confirmEmailUserId: 1 });
+    (usersServiceMock.findById as jest.Mock).mockResolvedValue({ id: 1, status: { id: require('../statuses/statuses.enum').StatusEnum.inactive } });
+    (usersServiceMock.update as jest.Mock).mockResolvedValue(undefined);
+
+    await service.confirmEmail('ok');
+
+    expect(usersServiceMock.update).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ status: { id: expect.any(Number) } }),
+    );
+  });
+});
+
 
