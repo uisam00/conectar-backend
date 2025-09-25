@@ -15,6 +15,7 @@
     "app:config": "ts-node -r tsconfig-paths/register ./.install-scripts/index.ts && npm install && npm run lint -- --fix",
     "seed:run:relational": "ts-node -r tsconfig-paths/register ./src/database/seeds/relational/run-seed.ts",
     "prebuild": "rimraf dist",
+    "build:prod": "tsc -p tsconfig.build.json",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
