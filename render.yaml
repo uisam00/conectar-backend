@@ -90,7 +90,7 @@ projects:
       - key: API_PREFIX
         sync: false
       region: ohio
-      buildCommand: npm install; npm run build;
+      buildCommand: npm install --include=dev && npm run build && npm prune --production;
       startCommand: npm run start;
       healthCheckPath: /api/v1/health
       autoDeployTrigger: commit
