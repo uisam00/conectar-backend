@@ -10,7 +10,7 @@ import {
   Max,
   Min,
 } from 'class-validator';
-import validateConfig from 'src/utils/validate-config';
+import validateConfig from '../utils/validate-config';
 
 enum Environment {
   Development = 'development',
