@@ -1,5 +1,15 @@
 # Changelog
 
+## <small>1.2.1 (2025-09-25)</small>
+
+* fix: corrige build pro render ([e8f2ada](https://github.com/uisam00/conectar-backend/commit/e8f2ada))
+* fix: corrige comando start no render ([0c15ff7](https://github.com/uisam00/conectar-backend/commit/0c15ff7))
+* fix: corrige dockerfile de produção para pegar env do render ([0eb188e](https://github.com/uisam00/conectar-backend/commit/0eb188e))
+* fix: corrige import para não causar esso no build com tsc ([69cd269](https://github.com/uisam00/conectar-backend/commit/69cd269))
+* fix: remove config do packages.json ([1a22697](https://github.com/uisam00/conectar-backend/commit/1a22697))
+* chore: adiciona docker pra prod ([fb52ff9](https://github.com/uisam00/conectar-backend/commit/fb52ff9))
+* chore: reconfigura render ([aa99738](https://github.com/uisam00/conectar-backend/commit/aa99738))
+
 ## 1.2.0 (2025-09-25)
 
 * chore: config para render ([5760cb4](https://github.com/uisam00/conectar-backend/commit/5760cb4))
