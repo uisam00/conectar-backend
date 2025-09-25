@@ -8,7 +8,7 @@ export class EntityDocumentHelper {
         return value.obj[value.key].toString();
       }
 
-      return 'unknown value';
+      return 'common.unknownValue';
     },
     {
       toPlainOnly: true,
