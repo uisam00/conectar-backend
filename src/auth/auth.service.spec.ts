@@ -227,4 +227,93 @@ describe('AuthService - register & confirmEmail', () => {
   });
 });
 
+describe('AuthService - forgotPassword & resetPassword', () => {
+  let service: AuthService;
+  const usersServiceMock = {
+    findByEmail: jest.fn(),
+    findById: jest.fn(),
+    update: jest.fn(),
+  } as unknown as UsersService;
+  const sessionServiceMock = {
+    deleteByUserId: jest.fn(),
+  } as unknown as SessionService;
+  const mailServiceMock = {
+    forgotPassword: jest.fn(),
+  } as unknown as MailService;
+  const jwtServiceMock = {
+    signAsync: jest.fn(),
+    verifyAsync: jest.fn(),
+  } as unknown as JwtService;
+  const configServiceMock = {
+    getOrThrow: jest.fn(),
+  } as unknown as ConfigService;
+
+  beforeEach(async () => {
+    jest.resetAllMocks();
+    (configServiceMock.getOrThrow as jest.Mock).mockImplementation((key: string) => {
+      const map = {
+        'auth.forgotExpires': '30m',
+        'auth.forgotSecret': 'forgot_secret',
+      } as Record<string, string>;
+      return map[key] ?? 'x';
+    });
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        AuthService,
+        { provide: UsersService, useValue: usersServiceMock },
+        { provide: SessionService, useValue: sessionServiceMock },
+        { provide: MailService, useValue: mailServiceMock },
+        { provide: JwtService, useValue: jwtServiceMock },
+        { provide: ConfigService, useValue: configServiceMock },
+      ],
+    }).compile();
+
+    service = module.get<AuthService>(AuthService);
+  });
+
+  it('forgotPassword should fail when email not exists', async () => {
+    (usersServiceMock.findByEmail as jest.Mock).mockResolvedValue(null);
+    await expect(service.forgotPassword('john@example.com')).rejects.toBeInstanceOf(
+      UnprocessableEntityException,
+    );
+  });
+
+  it('forgotPassword should sign token and send mail', async () => {
+    (usersServiceMock.findByEmail as jest.Mock).mockResolvedValue({ id: 1 });
+    (jwtServiceMock.signAsync as jest.Mock).mockResolvedValue('hash');
+
+    await service.forgotPassword('john@example.com');
+
+    expect(jwtServiceMock.signAsync).toHaveBeenCalled();
+    expect(mailServiceMock.forgotPassword).toHaveBeenCalled();
+  });
+
+  it('resetPassword should fail for invalid hash', async () => {
+    (jwtServiceMock.verifyAsync as jest.Mock).mockRejectedValue(new Error('bad'));
+    await expect(service.resetPassword('invalid', 'newpass')).rejects.toBeInstanceOf(
+      UnprocessableEntityException,
+    );
+  });
+
+  it('resetPassword should fail when user not found', async () => {
+    (jwtServiceMock.verifyAsync as jest.Mock).mockResolvedValue({ forgotUserId: 1 });
+    (usersServiceMock.findById as jest.Mock).mockResolvedValue(null);
+    await expect(service.resetPassword('ok', 'newpass')).rejects.toBeInstanceOf(
+      UnprocessableEntityException,
+    );
+  });
+
+  it('resetPassword should update user and revoke sessions', async () => {
+    (jwtServiceMock.verifyAsync as jest.Mock).mockResolvedValue({ forgotUserId: 1 });
+    (usersServiceMock.findById as jest.Mock).mockResolvedValue({ id: 1 });
+    (usersServiceMock.update as jest.Mock).mockResolvedValue(undefined);
+
+    await service.resetPassword('ok', 'newpass');
+
+    expect(sessionServiceMock.deleteByUserId).toHaveBeenCalledWith({ userId: 1 });
+    expect(usersServiceMock.update).toHaveBeenCalledWith(1, expect.objectContaining({ password: 'newpass' }));
+  });
+});
+
 
