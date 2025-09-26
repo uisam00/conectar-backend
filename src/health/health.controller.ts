@@ -1,13 +1,20 @@
-import { Controller, Get, HttpCode, HttpStatus, Version } from '@nestjs/common';
-import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, HttpCode, HttpStatus, Version, Post, Body, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { ApiOkResponse, ApiTags, ApiBody } from '@nestjs/swagger';
 import { MailerService } from '../mailer/mailer.service';
+import { ConfigService } from '@nestjs/config';
+import { SmtpTestDto } from './dto/smtp-test.dto';
 
 @ApiTags('Health')
 @Controller({
   path: 'health',
 })
 export class HealthController {
-  constructor(private readonly mailerService: MailerService) {}
+  private readonly smtpTestAttempts = new Map<string, { count: number; lastReset: number }>();
+  
+  constructor(
+    private readonly mailerService: MailerService,
+    private readonly configService: ConfigService,
+  ) {}
   @Get()
   @Version('1')
   @HttpCode(HttpStatus.OK)
@@ -20,26 +27,72 @@ export class HealthController {
     };
   }
 
-  @Get('smtp')
+  @Post('smtp')
   @Version('1')
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ description: 'SMTP service health check' })
-  public async checkSmtp() {
+  @ApiOkResponse({ description: 'SMTP service health check with email test' })
+  @ApiBody({ type: SmtpTestDto })
+  public async testSmtp(@Body() smtpTestDto: SmtpTestDto) {
+    // Verificar se está em ambiente de desenvolvimento ou homologação
+    const nodeEnv = this.configService.get('NODE_ENV');
+    if (nodeEnv !== 'development' && nodeEnv !== 'homologation') {
+      throw new ForbiddenException('Este endpoint só está disponível em ambiente de desenvolvimento ou homologação');
+    }
+
+    // Verificar limite de tentativas (3 vezes a cada 5 minutos)
+    const clientIp = 'default'; // Em produção, você pode usar req.ip
+    const now = Date.now();
+    const fiveMinutes = 5 * 60 * 1000;
+    
+    const attempts = this.smtpTestAttempts.get(clientIp);
+    
+    if (attempts) {
+      if (now - attempts.lastReset < fiveMinutes) {
+        if (attempts.count >= 3) {
+          throw new BadRequestException('Limite de 3 tentativas a cada 5 minutos excedido');
+        }
+        attempts.count++;
+      } else {
+        // Reset contador após 5 minutos
+        this.smtpTestAttempts.set(clientIp, { count: 1, lastReset: now });
+      }
+    } else {
+      this.smtpTestAttempts.set(clientIp, { count: 1, lastReset: now });
+    }
+
     try {
       // Test SMTP connection by verifying the transporter
       await this.mailerService['transporter'].verify();
       
+      // Enviar email de teste
+      await this.mailerService.sendMail({
+        to: smtpTestDto.email,
+        subject: 'Teste de Conectividade SMTP',
+        html: `
+          <h2>Teste de Conectividade SMTP</h2>
+          <p><strong>Mensagem:</strong> ${smtpTestDto.message}</p>
+          <p><strong>Timestamp:</strong> ${new Date().toISOString()}</p>
+          <p><strong>Status:</strong> ✅ SMTP funcionando corretamente</p>
+        `,
+        templatePath: undefined,
+        context: {},
+      });
+      
       return {
         status: 'ok',
         service: 'smtp',
-        message: 'SMTP connection successful',
+        message: 'SMTP connection successful and test email sent',
+        emailSent: true,
+        recipient: smtpTestDto.email,
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
       return {
         status: 'error',
         service: 'smtp',
-        message: `SMTP connection failed: ${error.message}`,
+        message: `SMTP test failed: ${error.message}`,
+        emailSent: false,
+        recipient: smtpTestDto.email,
         timestamp: new Date().toISOString(),
       };
     }
