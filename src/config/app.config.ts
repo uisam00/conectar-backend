@@ -12,7 +12,7 @@ import {
 } from 'class-validator';
 import validateConfig from '../utils/validate-config';
 
-enum Environment {
+export enum Environment {
   Development = 'development',
   Production = 'production',
   Test = 'test',

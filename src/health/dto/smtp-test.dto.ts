@@ -1,20 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsString, IsNotEmpty } from 'class-validator';
 
 export class SmtpTestDto {
-  @ApiProperty({ 
-    example: 'teste@example.com',
-    description: 'Email de destino para o teste'
+  @ApiProperty({
+    description: 'Email para teste de conectividade SMTP',
+    example: 'test@example.com',
   })
-  @IsEmail()
-  @IsNotEmpty()
+  @IsEmail({}, { message: 'Email deve ter um formato válido' })
+  @IsNotEmpty({ message: 'Email é obrigatório' })
   email: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
+    description: 'Mensagem personalizada para o teste',
     example: 'Teste de conectividade SMTP',
-    description: 'Mensagem a ser enviada no email de teste'
   })
-  @IsString()
-  @IsNotEmpty()
+  @IsString({ message: 'Mensagem deve ser uma string' })
+  @IsNotEmpty({ message: 'Mensagem é obrigatória' })
   message: string;
 }
