@@ -7,7 +7,7 @@
   "scripts": {
     "typeorm": "env-cmd ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
     "migration:generate": "npm run typeorm -- --dataSource=src/database/data-source.ts migration:generate",
-    "postmigration:generate": "npm run lint -- --fix",
+    "postmigration:generate": "echo 'Migration generated successfully'",
     "migration:create": "npm run typeorm -- migration:create",
     "migration:run": "npm run typeorm -- --dataSource=src/database/data-source.ts migration:run",
     "migration:revert": "npm run typeorm -- --dataSource=src/database/data-source.ts migration:revert",
@@ -99,6 +99,7 @@
     "hygen": "6.2.11",
     "is-ci": "4.1.0",
     "jest": "30.1.3",
+    "lint-staged": "^16.2.1",
     "prettier": "3.6.2",
     "prompts": "2.4.2",
     "release-it": "19.0.5",
@@ -126,6 +127,15 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "lint-staged": {
+    "*.{ts,js}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
   },
   "release-it": {
     "git": {
