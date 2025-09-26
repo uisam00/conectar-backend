@@ -29,10 +29,11 @@ describe('FilesService', () => {
   });
 
   it('should proxy findByIds', async () => {
-    (fileRepositoryMock.findByIds as jest.Mock).mockResolvedValue([{ id: 'a' }, { id: 'b' }]);
+    (fileRepositoryMock.findByIds as jest.Mock).mockResolvedValue([
+      { id: 'a' },
+      { id: 'b' },
+    ]);
     const res = await service.findByIds(['a', 'b'] as any);
     expect(res).toEqual([{ id: 'a' }, { id: 'b' }]);
   });
 });
-
-

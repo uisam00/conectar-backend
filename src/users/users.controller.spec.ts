@@ -1,8 +1,12 @@
 import 'reflect-metadata';
-jest.mock('src/utils/validate-config', () => ({
-  __esModule: true,
-  default: () => undefined,
-}), { virtual: true });
+jest.mock(
+  'src/utils/validate-config',
+  () => ({
+    __esModule: true,
+    default: () => undefined,
+  }),
+  { virtual: true },
+);
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersController } from './users.controller';
@@ -66,5 +70,3 @@ describe('UsersController', () => {
     expect(serviceMock.remove).toHaveBeenCalledWith(1);
   });
 });
-
-

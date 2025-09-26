@@ -19,5 +19,3 @@ describe('HealthController', () => {
     expect(typeof result.timestamp).toBe('string');
   });
 });
-
-

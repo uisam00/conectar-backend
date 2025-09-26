@@ -9,9 +9,9 @@ describe('ResolvePromisesInterceptor', () => {
       handle: () => of({ a: Promise.resolve(1), b: [Promise.resolve(2)] }),
     };
 
-    const result = await interceptor.intercept(ctx as any, next as any).toPromise();
+    const result = await interceptor
+      .intercept(ctx as any, next as any)
+      .toPromise();
     expect(result).toEqual({ a: 1, b: [2] });
   });
 });
-
-

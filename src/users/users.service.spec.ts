@@ -106,5 +106,3 @@ describe('UsersService', () => {
     expect(usersRepositoryMock.create).toHaveBeenCalled();
   });
 });
-
-

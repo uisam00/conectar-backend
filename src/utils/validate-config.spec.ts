@@ -18,5 +18,3 @@ describe('validateConfig', () => {
     expect(() => validateConfig({ PORT: 'abc' } as any, Env)).toThrow();
   });
 });
-
-

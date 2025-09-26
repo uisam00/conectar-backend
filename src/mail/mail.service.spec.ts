@@ -24,7 +24,7 @@ describe('MailService', () => {
   beforeEach(async () => {
     jest.resetAllMocks();
     // Simplificar URL no ambiente de teste para evitar "Invalid URL"
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     (global as any).URL = class {
       private value: string;
       searchParams = new (class {
@@ -42,11 +42,13 @@ describe('MailService', () => {
     } as unknown as any;
 
     // garantir workingDirectory para path.join
-    (configServiceMock.getOrThrow as jest.Mock).mockImplementation((key: string) => {
-      if (key === 'app.frontendDomain') return 'http://localhost:3000';
-      if (key === 'app.workingDirectory') return process.cwd();
-      return 'x';
-    });
+    (configServiceMock.getOrThrow as jest.Mock).mockImplementation(
+      (key: string) => {
+        if (key === 'app.frontendDomain') return 'http://localhost:3000';
+        if (key === 'app.workingDirectory') return process.cwd();
+        return 'x';
+      },
+    );
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MailService,
@@ -64,7 +66,10 @@ describe('MailService', () => {
   });
 
   it('forgotPassword should call mailerService.sendMail with expected fields', async () => {
-    await service.forgotPassword({ to: 'a@a.com', data: { hash: 'h', tokenExpires: Date.now() + 1000 } });
+    await service.forgotPassword({
+      to: 'a@a.com',
+      data: { hash: 'h', tokenExpires: Date.now() + 1000 },
+    });
     expect(mailerServiceMock.sendMail).toHaveBeenCalled();
   });
 
@@ -73,5 +78,3 @@ describe('MailService', () => {
     expect(mailerServiceMock.sendMail).toHaveBeenCalled();
   });
 });
-
-

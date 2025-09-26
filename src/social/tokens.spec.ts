@@ -16,5 +16,3 @@ describe('Tokens DTO', () => {
     expect(errors.length).toBe(0);
   });
 });
-
-

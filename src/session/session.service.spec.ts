@@ -45,22 +45,33 @@ describe('SessionService', () => {
   });
 
   it('should proxy deleteById', async () => {
-    (sessionRepositoryMock.deleteById as jest.Mock).mockResolvedValue(undefined);
+    (sessionRepositoryMock.deleteById as jest.Mock).mockResolvedValue(
+      undefined,
+    );
     await service.deleteById(1 as any);
     expect(sessionRepositoryMock.deleteById).toHaveBeenCalledWith(1);
   });
 
   it('should proxy deleteByUserId', async () => {
-    (sessionRepositoryMock.deleteByUserId as jest.Mock).mockResolvedValue(undefined);
+    (sessionRepositoryMock.deleteByUserId as jest.Mock).mockResolvedValue(
+      undefined,
+    );
     await service.deleteByUserId({ userId: 1 } as any);
-    expect(sessionRepositoryMock.deleteByUserId).toHaveBeenCalledWith({ userId: 1 });
+    expect(sessionRepositoryMock.deleteByUserId).toHaveBeenCalledWith({
+      userId: 1,
+    });
   });
 
   it('should proxy deleteByUserIdWithExclude', async () => {
-    (sessionRepositoryMock.deleteByUserIdWithExclude as jest.Mock).mockResolvedValue(undefined);
-    await service.deleteByUserIdWithExclude({ userId: 1, excludeSessionId: 2 } as any);
-    expect(sessionRepositoryMock.deleteByUserIdWithExclude).toHaveBeenCalledWith({ userId: 1, excludeSessionId: 2 });
+    (
+      sessionRepositoryMock.deleteByUserIdWithExclude as jest.Mock
+    ).mockResolvedValue(undefined);
+    await service.deleteByUserIdWithExclude({
+      userId: 1,
+      excludeSessionId: 2,
+    } as any);
+    expect(
+      sessionRepositoryMock.deleteByUserIdWithExclude,
+    ).toHaveBeenCalledWith({ userId: 1, excludeSessionId: 2 });
   });
 });
-
-

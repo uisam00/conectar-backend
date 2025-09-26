@@ -34,5 +34,3 @@ describe('HomeService', () => {
     expect(result).toEqual({ name: 'Conéctar Backend' });
   });
 });
-
-

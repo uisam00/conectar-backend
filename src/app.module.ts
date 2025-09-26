@@ -24,11 +24,11 @@ import { HealthModule } from './health/health.module';
 
 // <database-block>
 const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
-      useClass: TypeOrmConfigService,
-      dataSourceFactory: async (options: DataSourceOptions) => {
-        return new DataSource(options).initialize();
-      },
-})
+  useClass: TypeOrmConfigService,
+  dataSourceFactory: async (options: DataSourceOptions) => {
+    return new DataSource(options).initialize();
+  },
+});
 // </database-block>
 
 @Module({

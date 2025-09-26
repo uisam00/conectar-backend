@@ -48,5 +48,3 @@ describe('TypeOrmConfigService', () => {
     expect(anyOpts.extra).toBeDefined();
   });
 });
-
-

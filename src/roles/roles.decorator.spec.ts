@@ -10,5 +10,3 @@ describe('Roles decorator', () => {
     expect(val).toEqual([1, 2, 3]);
   });
 });
-
-

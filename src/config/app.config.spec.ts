@@ -1,10 +1,14 @@
 import type { AppConfig } from './app-config.type';
 
 // Evita dependência do alias de paths no ambiente de teste
-jest.mock('src/utils/validate-config', () => ({
-  __esModule: true,
-  default: () => undefined,
-}), { virtual: true });
+jest.mock(
+  'src/utils/validate-config',
+  () => ({
+    __esModule: true,
+    default: () => undefined,
+  }),
+  { virtual: true },
+);
 
 describe('app.config', () => {
   const OLD_ENV = process.env;
@@ -49,5 +53,3 @@ describe('app.config', () => {
     expect(typeof cfg.headerLanguage).toBe('string');
   });
 });
-
-

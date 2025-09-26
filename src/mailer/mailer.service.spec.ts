@@ -68,5 +68,3 @@ describe('MailerService', () => {
     expect(sendMailMock).toHaveBeenCalled();
   });
 });
-
-

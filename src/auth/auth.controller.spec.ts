@@ -1,8 +1,12 @@
 import 'reflect-metadata';
-jest.mock('src/utils/validate-config', () => ({
-  __esModule: true,
-  default: () => undefined,
-}), { virtual: true });
+jest.mock(
+  'src/utils/validate-config',
+  () => ({
+    __esModule: true,
+    default: () => undefined,
+  }),
+  { virtual: true },
+);
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -74,8 +78,13 @@ describe('AuthController', () => {
 
   it('refresh should delegate to service', async () => {
     (serviceMock.refreshToken as jest.Mock).mockResolvedValue({ token: 't' });
-    const res = await controller.refresh({ user: { sessionId: 1, hash: 'h' } } as any);
-    expect(serviceMock.refreshToken).toHaveBeenCalledWith({ sessionId: 1, hash: 'h' });
+    const res = await controller.refresh({
+      user: { sessionId: 1, hash: 'h' },
+    } as any);
+    expect(serviceMock.refreshToken).toHaveBeenCalledWith({
+      sessionId: 1,
+      hash: 'h',
+    });
     expect(res).toEqual({ token: 't' });
   });
 
@@ -96,5 +105,3 @@ describe('AuthController', () => {
     expect(serviceMock.softDelete).toHaveBeenCalledWith({ id: 1 });
   });
 });
-
-

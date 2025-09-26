@@ -32,5 +32,3 @@ describe('HomeController', () => {
     expect(result).toEqual({ name: 'Conéctar Backend' });
   });
 });
-
-
