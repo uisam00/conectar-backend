@@ -1,4 +1,51 @@
-/node_modules
-/.data
-/dist
-/files
+# Dependências
+node_modules
+npm-debug.log*
+
+# Arquivos de build
+dist
+build
+
+# Arquivos de teste
+coverage
+.nyc_output
+
+# Arquivos de ambiente
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Arquivos de IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# Arquivos de Git
+.git
+.gitignore
+
+# Arquivos de documentação
+README.md
+CHANGELOG.md
+*.md
+
+# Arquivos de configuração local
+docker-compose.yml
+docker-compose.override.yml
+Dockerfile.dev
+
+# Arquivos de teste
+test
+*.spec.ts
+*.test.ts
+
+# Arquivos temporários
+tmp
+temp
