@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.3.0 (2025-09-26)
+
+* fix: corrigir estrutura do railway.json ([7bb8636](https://github.com/uisam00/conectar-backend/commit/7bb8636))
+* fix: rename user table to users and fix email service ([d117eee](https://github.com/uisam00/conectar-backend/commit/d117eee))
+* fix: usa IP real para rate limiting no Render ([ad1f2f4](https://github.com/uisam00/conectar-backend/commit/ad1f2f4))
+* feat: adiciona endpoint health check SMTP ([3520832](https://github.com/uisam00/conectar-backend/commit/3520832))
+* feat: inversão de dependencia para teste smtp ([7bfd153](https://github.com/uisam00/conectar-backend/commit/7bfd153))
+* feat: melhora endpoint health SMTP com rate limiting e envio de email ([6f838cf](https://github.com/uisam00/conectar-backend/commit/6f838cf))
+* feat: otimizar Dockerfile para Railway com ambiente de teste ([114adf8](https://github.com/uisam00/conectar-backend/commit/114adf8))
+* refactor: corrige formatação ([4cd50d2](https://github.com/uisam00/conectar-backend/commit/4cd50d2))
+* docs: adiciona url do deploy da api ([ab4c77f](https://github.com/uisam00/conectar-backend/commit/ab4c77f))
+
 ## <small>1.2.1 (2025-09-25)</small>
 
 * fix: corrige build pro render ([e8f2ada](https://github.com/uisam00/conectar-backend/commit/e8f2ada))
