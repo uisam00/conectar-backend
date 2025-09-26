@@ -18,7 +18,7 @@ import { AuthProvidersEnum } from '../../../../../auth/auth-providers.enum';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 
 @Entity({
-  name: 'user',
+  name: 'users',
 })
 export class UserEntity extends EntityRelationalHelper {
   @PrimaryGeneratedColumn()
