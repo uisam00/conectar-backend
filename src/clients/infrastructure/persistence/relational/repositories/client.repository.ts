@@ -26,11 +26,15 @@ export class ClientRelationalRepository implements ClientRepository {
 
   async findMany(filters: {
     search?: string;
+    name?: string;
+    statusId?: number;
+    planId?: number;
     page?: number;
     limit?: number;
   }): Promise<{ data: Client[]; total: number }> {
     const queryBuilder = this.clientRepository.createQueryBuilder('client');
 
+    // Search filter (searches across multiple fields)
     if (filters.search) {
       queryBuilder.andWhere(
         'client.razaoSocial ILIKE :search OR client.nomeComercial ILIKE :search OR client.cnpj ILIKE :search',
@@ -38,6 +42,30 @@ export class ClientRelationalRepository implements ClientRepository {
           search: `%${filters.search}%`,
         },
       );
+    }
+
+    // Name filter (specific name search)
+    if (filters.name) {
+      queryBuilder.andWhere(
+        'client.razaoSocial ILIKE :name OR client.nomeComercial ILIKE :name',
+        {
+          name: `%${filters.name}%`,
+        },
+      );
+    }
+
+    // Status filter
+    if (filters.statusId) {
+      queryBuilder.andWhere('client.statusId = :statusId', {
+        statusId: filters.statusId,
+      });
+    }
+
+    // Plan filter
+    if (filters.planId) {
+      queryBuilder.andWhere('client.planId = :planId', {
+        planId: filters.planId,
+      });
     }
 
     const [data, total] = await queryBuilder

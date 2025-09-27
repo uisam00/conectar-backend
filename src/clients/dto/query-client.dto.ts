@@ -9,8 +9,41 @@ export class QueryClientDto {
     type: String,
     required: false,
     example: 'ABC',
+    description: 'Search term for razaoSocial, nomeComercial, or CNPJ',
   })
   search?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty({
+    type: String,
+    required: false,
+    example: 'Empresa ABC',
+    description: 'Filter by client name (razaoSocial or nomeComercial)',
+  })
+  name?: string;
+
+  @IsOptional()
+  @Transform(({ value }) => (value ? Number(value) : undefined))
+  @IsNumber()
+  @ApiProperty({
+    type: Number,
+    required: false,
+    example: 1,
+    description: 'Filter by status ID',
+  })
+  statusId?: number;
+
+  @IsOptional()
+  @Transform(({ value }) => (value ? Number(value) : undefined))
+  @IsNumber()
+  @ApiProperty({
+    type: Number,
+    required: false,
+    example: 1,
+    description: 'Filter by plan ID',
+  })
+  planId?: number;
 
   @IsOptional()
   @Transform(({ value }) => (value ? Number(value) : 1))

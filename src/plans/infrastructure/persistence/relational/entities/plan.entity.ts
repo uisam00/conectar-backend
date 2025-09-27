@@ -24,6 +24,9 @@ export class PlanEntity extends EntityRelationalHelper {
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   price?: number;
 
+  @Column({ type: 'boolean', default: false })
+  isSpecial: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

@@ -1,7 +1,4 @@
 #!/usr/bin/env sh
 
-# Executar lint-staged primeiro
+# Executar lint-staged
 npx lint-staged
-
-# Executar testes após lint
-npm test

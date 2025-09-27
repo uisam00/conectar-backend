@@ -74,7 +74,11 @@ export class ClientsController {
   @Get()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleEnum.admin)
-  @ApiOperation({ summary: 'Get all clients (Admin only)' })
+  @ApiOperation({
+    summary: 'Get all clients (Admin only)',
+    description:
+      'Retrieve clients with optional filters for name, status, and plan. Supports pagination and search functionality.',
+  })
   @ApiResponse({
     status: 200,
     description: 'Clients retrieved successfully',

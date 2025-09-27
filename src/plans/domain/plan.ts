@@ -29,6 +29,14 @@ export class Plan {
   })
   price?: number;
 
+  @Allow()
+  @ApiProperty({
+    type: Boolean,
+    example: false,
+    description: 'Indica se é um plano especial',
+  })
+  isSpecial?: boolean;
+
   @ApiProperty()
   createdAt: Date;
 

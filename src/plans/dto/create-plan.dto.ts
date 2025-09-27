@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsNumber } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsBoolean } from 'class-validator';
 
 export class CreatePlanDto {
   @IsString()
@@ -26,4 +26,14 @@ export class CreatePlanDto {
     required: false,
   })
   price?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  @ApiProperty({
+    type: Boolean,
+    example: false,
+    description: 'Indica se é um plano especial',
+    required: false,
+  })
+  isSpecial?: boolean;
 }
