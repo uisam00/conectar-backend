@@ -9,9 +9,9 @@ import {
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 
 @Entity({
-  name: 'plans',
+  name: 'client_roles',
 })
-export class PlanEntity extends EntityRelationalHelper {
+export class ClientRoleEntity extends EntityRelationalHelper {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -21,8 +21,8 @@ export class PlanEntity extends EntityRelationalHelper {
   @Column({ type: 'text', nullable: true })
   description?: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-  price?: number;
+  @Column({ type: 'jsonb', nullable: true })
+  permissions?: Record<string, any>;
 
   @CreateDateColumn()
   createdAt: Date;

@@ -13,7 +13,9 @@ export class PlansService {
     return this.planRepository.create(createPlanDto);
   }
 
-  async findMany(queryDto: QueryPlanDto): Promise<{ data: Plan[]; total: number }> {
+  async findMany(
+    queryDto: QueryPlanDto,
+  ): Promise<{ data: Plan[]; total: number }> {
     return this.planRepository.findMany(queryDto);
   }
 

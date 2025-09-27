@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Allow } from 'class-validator';
 
-export class Plan {
+export class ClientRole {
   @Allow()
   @ApiProperty({
     type: Number,
@@ -11,23 +11,27 @@ export class Plan {
   @Allow()
   @ApiProperty({
     type: String,
-    example: 'Plano Básico',
+    example: 'client_admin',
   })
   name: string;
 
   @Allow()
   @ApiProperty({
     type: String,
-    example: 'Plano ideal para pequenas empresas',
+    example: 'Administrador do cliente',
   })
   description?: string;
 
   @Allow()
   @ApiProperty({
-    type: Number,
-    example: 99.9,
+    type: Object,
+    example: {
+      canManageUsers: true,
+      canManageClient: true,
+      canViewReports: true,
+    },
   })
-  price?: number;
+  permissions?: Record<string, any>;
 
   @ApiProperty()
   createdAt: Date;

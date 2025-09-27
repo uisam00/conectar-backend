@@ -6,7 +6,7 @@ export class RenameUserTableToUsers1758912041552 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Rename the table from 'user' to 'users'
     await queryRunner.query(`ALTER TABLE "user" RENAME TO "users"`);
-    
+
     // Create indexes on the renamed table
     await queryRunner.query(
       `CREATE INDEX "IDX_2025eaefc4e1b443c84f6ca9b2" ON "users" ("socialId")`,
@@ -30,7 +30,7 @@ export class RenameUserTableToUsers1758912041552 implements MigrationInterface {
     await queryRunner.query(
       `DROP INDEX "public"."IDX_2025eaefc4e1b443c84f6ca9b2"`,
     );
-    
+
     // Rename the table back from 'users' to 'user'
     await queryRunner.query(`ALTER TABLE "users" RENAME TO "user"`);
   }

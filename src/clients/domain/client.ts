@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Allow } from 'class-validator';
 
-export class Plan {
+export class Client {
   @Allow()
   @ApiProperty({
     type: Number,
@@ -11,23 +11,37 @@ export class Plan {
   @Allow()
   @ApiProperty({
     type: String,
-    example: 'Plano Básico',
+    example: 'Empresa ABC Ltda',
   })
-  name: string;
+  razaoSocial: string;
 
   @Allow()
   @ApiProperty({
     type: String,
-    example: 'Plano ideal para pequenas empresas',
+    example: '12.345.678/0001-90',
   })
-  description?: string;
+  cnpj: string;
+
+  @Allow()
+  @ApiProperty({
+    type: String,
+    example: 'ABC Comércio',
+  })
+  nomeComercial?: string;
 
   @Allow()
   @ApiProperty({
     type: Number,
-    example: 99.9,
+    example: 1,
   })
-  price?: number;
+  statusId: number;
+
+  @Allow()
+  @ApiProperty({
+    type: Number,
+    example: 1,
+  })
+  planId: number;
 
   @ApiProperty()
   createdAt: Date;

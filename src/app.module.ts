@@ -21,6 +21,9 @@ import { AllConfigType } from './config/config.type';
 import { SessionModule } from './session/session.module';
 import { MailerModule } from './mailer/mailer.module';
 import { HealthModule } from './health/health.module';
+import { PlansModule } from './plans/plans.module';
+import { ClientsModule } from './clients/clients.module';
+import { ClientRolesModule } from './client-roles/client-roles.module';
 
 // <database-block>
 const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
@@ -78,6 +81,9 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
     MailerModule,
     HomeModule,
     HealthModule,
+    PlansModule,
+    ClientsModule,
+    ClientRolesModule,
   ],
 })
 export class AppModule {}

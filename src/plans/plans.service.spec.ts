@@ -18,12 +18,7 @@ describe('PlansService', () => {
     id: 1,
     name: 'Plano Básico',
     description: 'Plano ideal para pequenas empresas',
-    price: 99.90,
-    features: {
-      maxUsers: 10,
-      maxStorage: '1GB',
-      features: ['email', 'support']
-    },
+    price: 99.9,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -74,12 +69,7 @@ describe('PlansService', () => {
       const createPlanDto: CreatePlanDto = {
         name: 'Plano Básico',
         description: 'Plano ideal para pequenas empresas',
-        price: 99.90,
-        features: {
-          maxUsers: 10,
-          maxStorage: '1GB',
-          features: ['email', 'support']
-        },
+        price: 99.9,
       };
 
       planRepository.create.mockResolvedValue(mockPlan);
@@ -140,7 +130,7 @@ describe('PlansService', () => {
       const id = 1;
       const updatePlanDto: UpdatePlanDto = {
         name: 'Plano Básico Atualizado',
-        price: 149.90,
+        price: 149.9,
       };
 
       const updatedPlan = { ...mockPlan, ...updatePlanDto };
@@ -166,24 +156,39 @@ describe('PlansService', () => {
 
   describe('Controller Authorization', () => {
     it('should have admin protection on create endpoint', () => {
-      const createMetadata = Reflect.getMetadata('roles', PlansController.prototype.create);
+      const createMetadata = Reflect.getMetadata(
+        'roles',
+        PlansController.prototype.create,
+      );
       expect(createMetadata).toEqual([1]); // RoleEnum.admin = 1
     });
 
     it('should have admin protection on update endpoint', () => {
-      const updateMetadata = Reflect.getMetadata('roles', PlansController.prototype.update);
+      const updateMetadata = Reflect.getMetadata(
+        'roles',
+        PlansController.prototype.update,
+      );
       expect(updateMetadata).toEqual([1]); // RoleEnum.admin = 1
     });
 
     it('should have admin protection on delete endpoint', () => {
-      const deleteMetadata = Reflect.getMetadata('roles', PlansController.prototype.remove);
+      const deleteMetadata = Reflect.getMetadata(
+        'roles',
+        PlansController.prototype.remove,
+      );
       expect(deleteMetadata).toEqual([1]); // RoleEnum.admin = 1
     });
 
     it('should allow public access to read endpoints', () => {
-      const findAllMetadata = Reflect.getMetadata('roles', PlansController.prototype.findAll);
-      const findOneMetadata = Reflect.getMetadata('roles', PlansController.prototype.findOne);
-      
+      const findAllMetadata = Reflect.getMetadata(
+        'roles',
+        PlansController.prototype.findAll,
+      );
+      const findOneMetadata = Reflect.getMetadata(
+        'roles',
+        PlansController.prototype.findOne,
+      );
+
       expect(findAllMetadata).toBeUndefined();
       expect(findOneMetadata).toBeUndefined();
     });

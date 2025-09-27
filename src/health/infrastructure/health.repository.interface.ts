@@ -5,7 +5,10 @@ export interface HealthRepository {
     timestamp: string;
   }>;
 
-  testSmtpConnection(email: string, message: string): Promise<{
+  testSmtpConnection(
+    email: string,
+    message: string,
+  ): Promise<{
     status: string;
     service: string;
     message: string;

@@ -10,7 +10,6 @@ export class PlanMapper {
     domain.name = raw.name;
     domain.description = raw.description;
     domain.price = raw.price;
-    domain.features = raw.features;
     domain.createdAt = raw.createdAt;
     domain.updatedAt = raw.updatedAt;
     domain.deletedAt = raw.deletedAt;
@@ -23,7 +22,6 @@ export class PlanMapper {
     entity.name = domain.name;
     entity.description = domain.description;
     entity.price = domain.price;
-    entity.features = domain.features;
     return entity;
   }
 }

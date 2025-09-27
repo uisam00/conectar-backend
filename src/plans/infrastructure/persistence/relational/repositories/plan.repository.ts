@@ -14,7 +14,9 @@ export class PlanRelationalRepository implements PlanRepository {
     private readonly mapper: PlanMapper,
   ) {}
 
-  async create(data: Omit<Plan, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>): Promise<Plan> {
+  async create(
+    data: Omit<Plan, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>,
+  ): Promise<Plan> {
     const persistenceModel = this.mapper.toPersistence(data as Plan);
     const newEntity = await this.planRepository.save(
       this.planRepository.create(persistenceModel),
@@ -30,9 +32,12 @@ export class PlanRelationalRepository implements PlanRepository {
     const queryBuilder = this.planRepository.createQueryBuilder('plan');
 
     if (filters.search) {
-      queryBuilder.andWhere('plan.name ILIKE :search OR plan.description ILIKE :search', {
-        search: `%${filters.search}%`,
-      });
+      queryBuilder.andWhere(
+        'plan.name ILIKE :search OR plan.description ILIKE :search',
+        {
+          search: `%${filters.search}%`,
+        },
+      );
     }
 
     const [data, total] = await queryBuilder

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsNumber, IsObject } from 'class-validator';
+import { IsString, IsOptional, IsNumber } from 'class-validator';
 
 export class CreatePlanDto {
   @IsString()
@@ -22,21 +22,8 @@ export class CreatePlanDto {
   @IsNumber()
   @ApiProperty({
     type: Number,
-    example: 99.90,
+    example: 99.9,
     required: false,
   })
   price?: number;
-
-  @IsOptional()
-  @IsObject()
-  @ApiProperty({
-    type: Object,
-    example: {
-      maxUsers: 10,
-      maxStorage: '1GB',
-      features: ['email', 'support']
-    },
-    required: false,
-  })
-  features?: Record<string, any>;
 }

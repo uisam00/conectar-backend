@@ -6,19 +6,22 @@ import { HealthRepository } from '../health.repository.interface';
 export class HealthRepositoryImpl implements HealthRepository {
   constructor(private readonly mailerService: MailerService) {}
 
-  async checkHealth(): Promise<{
+  checkHealth(): Promise<{
     status: string;
     uptime: number;
     timestamp: string;
   }> {
-    return {
+    return Promise.resolve({
       status: 'ok',
       uptime: process.uptime(),
       timestamp: new Date().toISOString(),
-    };
+    });
   }
 
-  async testSmtpConnection(email: string, message: string): Promise<{
+  async testSmtpConnection(
+    email: string,
+    message: string,
+  ): Promise<{
     status: string;
     service: string;
     message: string;

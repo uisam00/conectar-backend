@@ -13,7 +13,7 @@ enum Environment {
 
 describe('HealthController', () => {
   let controller: HealthController;
-  let healthService: HealthService;
+  // let healthService: HealthService;
   let configService: ConfigService;
 
   const mockHealthRepository = {
@@ -40,7 +40,7 @@ describe('HealthController', () => {
     }).compile();
 
     controller = module.get<HealthController>(HealthController);
-    healthService = module.get<HealthService>(HealthService);
+    // healthService = module.get<HealthService>(HealthService);
     configService = module.get<ConfigService>(ConfigService);
   });
 
@@ -101,7 +101,9 @@ describe('HealthController', () => {
         timestamp: '2024-01-01T00:00:00.000Z',
       };
 
-      mockHealthRepository.testSmtpConnection.mockResolvedValue(mockSmtpResponse);
+      mockHealthRepository.testSmtpConnection.mockResolvedValue(
+        mockSmtpResponse,
+      );
 
       const result = await controller.testSmtp(mockSmtpTestDto, mockRequest);
 
@@ -125,7 +127,9 @@ describe('HealthController', () => {
         timestamp: '2024-01-01T00:00:00.000Z',
       };
 
-      mockHealthRepository.testSmtpConnection.mockResolvedValue(mockSmtpErrorResponse);
+      mockHealthRepository.testSmtpConnection.mockResolvedValue(
+        mockSmtpErrorResponse,
+      );
 
       const result = await controller.testSmtp(mockSmtpTestDto, mockRequest);
 
@@ -137,7 +141,9 @@ describe('HealthController', () => {
     it('should throw error when not in development or test environment', async () => {
       jest.spyOn(configService, 'get').mockReturnValue(Environment.Production);
 
-      await expect(controller.testSmtp(mockSmtpTestDto, mockRequest)).rejects.toThrow(
+      await expect(
+        controller.testSmtp(mockSmtpTestDto, mockRequest),
+      ).rejects.toThrow(
         'Este endpoint só está disponível em ambiente de desenvolvimento ou teste',
       );
     });
@@ -156,9 +162,14 @@ describe('HealthController', () => {
         timestamp: '2024-01-01T00:00:00.000Z',
       };
 
-      mockHealthRepository.testSmtpConnection.mockResolvedValue(mockSmtpResponse);
+      mockHealthRepository.testSmtpConnection.mockResolvedValue(
+        mockSmtpResponse,
+      );
 
-      const result = await controller.testSmtp(mockSmtpTestDto, mockRequestWithoutIp);
+      const result = await controller.testSmtp(
+        mockSmtpTestDto,
+        mockRequestWithoutIp,
+      );
 
       expect(result).toEqual(mockSmtpResponse);
     });
@@ -177,9 +188,14 @@ describe('HealthController', () => {
         timestamp: '2024-01-01T00:00:00.000Z',
       };
 
-      mockHealthRepository.testSmtpConnection.mockResolvedValue(mockSmtpResponse);
+      mockHealthRepository.testSmtpConnection.mockResolvedValue(
+        mockSmtpResponse,
+      );
 
-      const result = await controller.testSmtp(mockSmtpTestDto, mockRequestUnknownIp);
+      const result = await controller.testSmtp(
+        mockSmtpTestDto,
+        mockRequestUnknownIp,
+      );
 
       expect(result).toEqual(mockSmtpResponse);
     });
