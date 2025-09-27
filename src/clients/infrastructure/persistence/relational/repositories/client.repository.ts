@@ -29,10 +29,16 @@ export class ClientRelationalRepository implements ClientRepository {
     name?: string;
     statusId?: number;
     planId?: number;
+    isSpecial?: boolean;
     page?: number;
     limit?: number;
   }): Promise<{ data: Client[]; total: number }> {
     const queryBuilder = this.clientRepository.createQueryBuilder('client');
+
+    // Join with plans table if isSpecial filter is used
+    if (filters.isSpecial !== undefined) {
+      queryBuilder.leftJoin('plans', 'plan', 'plan.id = client.planId');
+    }
 
     // Search filter (searches across multiple fields)
     if (filters.search) {
@@ -66,6 +72,22 @@ export class ClientRelationalRepository implements ClientRepository {
       queryBuilder.andWhere('client.planId = :planId', {
         planId: filters.planId,
       });
+    }
+
+    // Special plan filter
+    if (filters.isSpecial !== undefined) {
+      if (filters.isSpecial) {
+        queryBuilder.andWhere('plan.isSpecial = :isSpecial', {
+          isSpecial: true,
+        });
+      } else {
+        queryBuilder.andWhere(
+          '(plan.isSpecial = :isSpecial OR plan.isSpecial IS NULL)',
+          {
+            isSpecial: false,
+          },
+        );
+      }
     }
 
     const [data, total] = await queryBuilder

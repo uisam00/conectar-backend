@@ -77,7 +77,7 @@ export class ClientsController {
   @ApiOperation({
     summary: 'Get all clients (Admin only)',
     description:
-      'Retrieve clients with optional filters for name, status, and plan. Supports pagination and search functionality.',
+      'Retrieve clients with optional filters for name, status, plan, and special plans. Supports pagination and search functionality.',
   })
   @ApiResponse({
     status: 200,
