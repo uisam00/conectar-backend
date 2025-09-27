@@ -26,6 +26,7 @@ import { ClientDto } from './dto/client.dto';
 import { Roles } from '../roles/roles.decorator';
 import { RolesGuard } from '../roles/roles.guard';
 import { RoleEnum } from '../roles/roles.enum';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('Clients')
 @ApiBearerAuth()
@@ -37,7 +38,7 @@ export class ClientsController {
   constructor(private readonly clientsService: ClientsService) {}
 
   @Post()
-  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleEnum.admin)
   @ApiOperation({ summary: 'Create a new client (Admin only)' })
   @ApiResponse({
@@ -74,7 +75,7 @@ export class ClientsController {
   }
 
   @Patch(':id')
-  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleEnum.admin)
   @ApiOperation({ summary: 'Update client (Admin only)' })
   @ApiResponse({
@@ -95,7 +96,7 @@ export class ClientsController {
   }
 
   @Delete(':id')
-  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleEnum.admin)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete client (Admin only)' })
