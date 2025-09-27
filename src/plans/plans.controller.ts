@@ -26,6 +26,7 @@ import { PlanDto } from './dto/plan.dto';
 import { Roles } from '../roles/roles.decorator';
 import { RolesGuard } from '../roles/roles.guard';
 import { RoleEnum } from '../roles/roles.enum';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('Plans')
 @ApiBearerAuth()
@@ -37,7 +38,7 @@ export class PlansController {
   constructor(private readonly plansService: PlansService) {}
 
   @Post()
-  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleEnum.admin)
   @ApiOperation({ summary: 'Create a new plan (Admin only)' })
   @ApiResponse({
@@ -74,7 +75,7 @@ export class PlansController {
   }
 
   @Patch(':id')
-  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleEnum.admin)
   @ApiOperation({ summary: 'Update plan (Admin only)' })
   @ApiResponse({
@@ -95,7 +96,7 @@ export class PlansController {
   }
 
   @Delete(':id')
-  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleEnum.admin)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete plan (Admin only)' })
