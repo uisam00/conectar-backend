@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Like } from 'typeorm';
 import { ClientEntity } from '../entities/client.entity';
 import { ClientMapper } from '../mappers/client.mapper';
 import { ClientRepository } from '../../client.repository';
@@ -33,67 +33,61 @@ export class ClientRelationalRepository implements ClientRepository {
     page?: number;
     limit?: number;
   }): Promise<{ data: Client[]; total: number }> {
-    const queryBuilder = this.clientRepository.createQueryBuilder('client');
-
-    // Join with plans table if isSpecial filter is used
-    if (filters.isSpecial !== undefined) {
-      queryBuilder.leftJoin('plans', 'plan', 'plan.id = client.planId');
-    }
-
-    // Search filter (searches across multiple fields)
-    if (filters.search) {
-      queryBuilder.andWhere(
-        'client.razaoSocial ILIKE :search OR client.nomeComercial ILIKE :search OR client.cnpj ILIKE :search',
-        {
-          search: `%${filters.search}%`,
-        },
-      );
-    }
-
-    // Name filter (specific name search)
-    if (filters.name) {
-      queryBuilder.andWhere(
-        'client.razaoSocial ILIKE :name OR client.nomeComercial ILIKE :name',
-        {
-          name: `%${filters.name}%`,
-        },
-      );
-    }
+    const whereConditions: any = {};
+    const relations = ['status', 'plan'];
 
     // Status filter
     if (filters.statusId) {
-      queryBuilder.andWhere('client.statusId = :statusId', {
-        statusId: filters.statusId,
-      });
+      whereConditions.statusId = filters.statusId;
     }
 
     // Plan filter
     if (filters.planId) {
-      queryBuilder.andWhere('client.planId = :planId', {
-        planId: filters.planId,
-      });
+      whereConditions.planId = filters.planId;
     }
 
     // Special plan filter
     if (filters.isSpecial !== undefined) {
+      console.log('Applying isSpecial filter:', filters.isSpecial);
       if (filters.isSpecial) {
-        queryBuilder.andWhere('plan.isSpecial = :isSpecial', {
-          isSpecial: true,
-        });
+        whereConditions.plan = { isSpecial: true };
       } else {
-        queryBuilder.andWhere(
-          '(plan.isSpecial = :isSpecial OR plan.isSpecial IS NULL)',
-          {
-            isSpecial: false,
-          },
-        );
+        whereConditions.plan = { isSpecial: false };
       }
     }
 
-    const [data, total] = await queryBuilder
-      .skip(((filters.page || 1) - 1) * (filters.limit || 10))
-      .take(filters.limit || 10)
-      .getManyAndCount();
+    // Search and name filters will be handled separately
+    const searchConditions: any[] = [];
+
+    if (filters.search) {
+      searchConditions.push(
+        { razaoSocial: Like(`%${filters.search}%`) },
+        { nomeComercial: Like(`%${filters.search}%`) },
+        { cnpj: Like(`%${filters.search}%`) },
+      );
+    }
+
+    if (filters.name) {
+      searchConditions.push(
+        { razaoSocial: Like(`%${filters.name}%`) },
+        { nomeComercial: Like(`%${filters.name}%`) },
+      );
+    }
+
+    // Combine where conditions
+    const where =
+      searchConditions.length > 0
+        ? [{ ...whereConditions, $or: searchConditions }]
+        : whereConditions;
+
+    console.log('Where conditions:', JSON.stringify(where, null, 2));
+
+    const [data, total] = await this.clientRepository.findAndCount({
+      where,
+      relations,
+      skip: ((filters.page || 1) - 1) * (filters.limit || 10),
+      take: filters.limit || 10,
+    });
 
     return {
       data: data.map((item) => this.mapper.toDomain(item)),
