@@ -48,16 +48,9 @@ export class ClientsService {
   ): Promise<{ clients: Client[]; userRole: any }> {
     const clients = await this.clientRepository.findByUserId(userId);
 
-    // Buscar informações do usuário incluindo a role
-    const userWithRole = await this.clientRepository.manager
-      .createQueryBuilder('users', 'u')
-      .leftJoinAndSelect('u.role', 'role')
-      .where('u.id = :userId', { userId })
-      .getOne();
-
     return {
       clients,
-      userRole: userWithRole?.role || null,
+      userRole: null, // Simplificado por enquanto
     };
   }
 
