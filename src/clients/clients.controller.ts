@@ -47,10 +47,25 @@ export class ClientsController {
     description: 'Client created successfully',
     type: ClientDto,
   })
-  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - Invalid data or CNPJ format',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
   @ApiResponse({
     status: 403,
     description: 'Forbidden - Admin access required',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Conflict - CNPJ already exists',
+  })
+  @ApiResponse({
+    status: 422,
+    description: 'Unprocessable Entity - CNPJ validation failed',
   })
   create(@Body() createClientDto: CreateClientDto): Promise<ClientDto> {
     return this.clientsService.create(createClientDto);
@@ -60,7 +75,24 @@ export class ClientsController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleEnum.admin)
   @ApiOperation({ summary: 'Get all clients (Admin only)' })
-  @ApiResponse({ status: 200, description: 'Clients retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Clients retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        data: {
+          type: 'array',
+          items: { $ref: '#/components/schemas/ClientDto' },
+        },
+        total: { type: 'number' },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
   @ApiResponse({
     status: 403,
     description: 'Forbidden - Admin access required',
@@ -75,6 +107,18 @@ export class ClientsController {
   @ApiResponse({
     status: 200,
     description: 'User clients retrieved successfully',
+    schema: {
+      type: 'array',
+      items: { $ref: '#/components/schemas/ClientDto' },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - Invalid user ID format',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
   })
   @ApiResponse({
     status: 403,
@@ -92,10 +136,21 @@ export class ClientsController {
     description: 'Client retrieved successfully',
     type: ClientDto,
   })
-  @ApiResponse({ status: 404, description: 'Client not found' })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - Invalid client ID format',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
   @ApiResponse({
     status: 403,
     description: 'Forbidden - User must be a member of this client',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Client not found',
   })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.clientsService.findById(id);
@@ -110,10 +165,29 @@ export class ClientsController {
     description: 'Client updated successfully',
     type: ClientDto,
   })
-  @ApiResponse({ status: 404, description: 'Client not found' })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - Invalid data or CNPJ format',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
   @ApiResponse({
     status: 403,
     description: 'Forbidden - Admin access required',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Client not found',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Conflict - CNPJ already exists in another client',
+  })
+  @ApiResponse({
+    status: 422,
+    description: 'Unprocessable Entity - CNPJ validation failed',
   })
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -127,11 +201,25 @@ export class ClientsController {
   @Roles(RoleEnum.admin)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete client (Admin only)' })
-  @ApiResponse({ status: 204, description: 'Client deleted successfully' })
-  @ApiResponse({ status: 404, description: 'Client not found' })
+  @ApiResponse({
+    status: 204,
+    description: 'Client deleted successfully',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - Invalid client ID format',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
   @ApiResponse({
     status: 403,
     description: 'Forbidden - Admin access required',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Client not found',
   })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.clientsService.delete(id);
