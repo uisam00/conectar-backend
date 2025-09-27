@@ -39,21 +39,6 @@ export class ClientsService {
     return this.clientRepository.findById(id);
   }
 
-  async findByUserId(userId: number): Promise<Client[]> {
-    return this.clientRepository.findByUserId(userId);
-  }
-
-  async findMyClientsWithRole(
-    userId: number,
-  ): Promise<{ clients: Client[]; userRole: any }> {
-    const clients = await this.clientRepository.findByUserId(userId);
-
-    return {
-      clients,
-      userRole: null, // Simplificado por enquanto
-    };
-  }
-
   async update(id: number, updateClientDto: UpdateClientDto): Promise<Client> {
     // Se o CNPJ está sendo atualizado, verificar se já existe
     if (updateClientDto.cnpj) {

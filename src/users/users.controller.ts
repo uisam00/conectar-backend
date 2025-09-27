@@ -11,6 +11,7 @@ import {
   HttpStatus,
   HttpCode,
   SerializeOptions,
+  Request,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -20,6 +21,8 @@ import {
   ApiOkResponse,
   ApiParam,
   ApiTags,
+  ApiOperation,
+  ApiResponse,
 } from '@nestjs/swagger';
 import { Roles } from '../roles/roles.decorator';
 import { RoleEnum } from '../roles/roles.enum';
@@ -37,8 +40,7 @@ import { RolesGuard } from '../roles/roles.guard';
 import { infinityPagination } from '../utils/infinity-pagination';
 
 @ApiBearerAuth()
-@Roles(RoleEnum.admin)
-@UseGuards(AuthGuard('jwt'), RolesGuard)
+@UseGuards(AuthGuard('jwt'))
 @ApiTags('Users')
 @Controller({
   path: 'users',
@@ -54,6 +56,8 @@ export class UsersController {
     groups: ['admin'],
   })
   @Post()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createProfileDto: CreateUserDto): Promise<User> {
     return this.usersService.create(createProfileDto);
@@ -66,6 +70,8 @@ export class UsersController {
     groups: ['admin'],
   })
   @Get()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
   @HttpCode(HttpStatus.OK)
   async findAll(
     @Query() query: QueryUserDto,
@@ -96,6 +102,8 @@ export class UsersController {
     groups: ['admin'],
   })
   @Get(':id')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
   @HttpCode(HttpStatus.OK)
   @ApiParam({
     name: 'id',
@@ -113,6 +121,8 @@ export class UsersController {
     groups: ['admin'],
   })
   @Patch(':id')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
   @HttpCode(HttpStatus.OK)
   @ApiParam({
     name: 'id',
@@ -127,6 +137,8 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
   @ApiParam({
     name: 'id',
     type: String,
@@ -135,5 +147,47 @@ export class UsersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id') id: User['id']): Promise<void> {
     return this.usersService.remove(id);
+  }
+
+  @Get('clients/me')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiOperation({
+    summary: 'Get clients for the authenticated user',
+    description:
+      'Retrieve all clients associated with the currently authenticated user',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'User clients retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        clients: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'number' },
+              name: { type: 'string' },
+              cnpj: { type: 'string' },
+              status: { type: 'string' },
+              createdAt: { type: 'string' },
+              updatedAt: { type: 'string' },
+            },
+          },
+        },
+        userRole: {
+          type: 'object',
+          nullable: true,
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
+  findMyClients(@Request() request) {
+    return this.usersService.findMyClients(request.user.id);
   }
 }
