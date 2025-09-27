@@ -5,6 +5,7 @@ import {
   IsNumber,
   Min,
   IsBoolean,
+  IsIn,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
@@ -83,4 +84,25 @@ export class QueryClientDto {
     example: 10,
   })
   limit?: number;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty({
+    type: String,
+    required: false,
+    example: 'razaoSocial',
+    description: 'Field to sort by',
+  })
+  sortBy?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['ASC', 'DESC'])
+  @ApiProperty({
+    type: String,
+    required: false,
+    example: 'ASC',
+    description: 'Sort order (ASC or DESC)',
+  })
+  sortOrder?: 'ASC' | 'DESC';
 }

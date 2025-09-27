@@ -32,6 +32,8 @@ export class ClientRelationalRepository implements ClientRepository {
     isSpecial?: boolean;
     page?: number;
     limit?: number;
+    sortBy?: string;
+    sortOrder?: 'ASC' | 'DESC';
   }): Promise<{ data: Client[]; total: number }> {
     const whereConditions: any = {};
     const relations = ['status', 'plan'];
@@ -82,11 +84,20 @@ export class ClientRelationalRepository implements ClientRepository {
 
     console.log('Where conditions:', JSON.stringify(where, null, 2));
 
+    // Build order object
+    const order: any = {};
+    if (filters.sortBy && filters.sortOrder) {
+      order[filters.sortBy] = filters.sortOrder;
+    }
+
+    console.log('Order conditions:', JSON.stringify(order, null, 2));
+
     const [data, total] = await this.clientRepository.findAndCount({
       where,
       relations,
       skip: ((filters.page || 1) - 1) * (filters.limit || 10),
       take: filters.limit || 10,
+      order: Object.keys(order).length > 0 ? order : undefined,
     });
 
     return {
