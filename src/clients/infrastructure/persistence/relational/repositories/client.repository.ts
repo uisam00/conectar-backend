@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like } from 'typeorm';
+import { Repository, ILike } from 'typeorm';
 import { ClientEntity } from '../entities/client.entity';
 import { ClientMapper } from '../mappers/client.mapper';
 import { ClientRepository } from '../../client.repository';
@@ -27,6 +27,7 @@ export class ClientRelationalRepository implements ClientRepository {
   async findMany(filters: {
     search?: string;
     name?: string;
+    cnpj?: string;
     statusId?: number;
     planId?: number;
     isSpecial?: boolean;
@@ -61,28 +62,43 @@ export class ClientRelationalRepository implements ClientRepository {
     // Search and name filters will be handled separately
     const searchConditions: any[] = [];
 
+    // Search por nomes (razaoSocial e nomeComercial) - case insensitive
     if (filters.search) {
-      searchConditions.push(
-        { razaoSocial: Like(`%${filters.search}%`) },
-        { nomeComercial: Like(`%${filters.search}%`) },
-        { cnpj: Like(`%${filters.search}%`) },
+      console.log('Search filter:', filters.search);
+      console.log(
+        'Creating search conditions for razaoSocial and nomeComercial',
       );
+      searchConditions.push(
+        { razaoSocial: ILike(`%${filters.search}%`) },
+        { nomeComercial: ILike(`%${filters.search}%`) },
+      );
+      console.log('Search conditions created:', searchConditions);
     }
 
-    if (filters.name) {
-      searchConditions.push(
-        { razaoSocial: Like(`%${filters.name}%`) },
-        { nomeComercial: Like(`%${filters.name}%`) },
-      );
+    // Search por CNPJ - case insensitive
+    if (filters.cnpj) {
+      console.log('CNPJ filter:', filters.cnpj);
+      searchConditions.push({ cnpj: ILike(`%${filters.cnpj}%`) });
     }
 
-    // Combine where conditions
-    const where =
-      searchConditions.length > 0
-        ? [{ ...whereConditions, $or: searchConditions }]
-        : whereConditions;
+    // Combine where conditions using TypeORM's Or operator
+    let where: any;
+    if (searchConditions.length > 0) {
+      // Create an array of where conditions, each combining base conditions with search conditions
+      where = searchConditions.map((searchCondition) => ({
+        ...whereConditions,
+        ...searchCondition,
+      }));
+    } else {
+      where = whereConditions;
+    }
 
     console.log('Where conditions:', JSON.stringify(where, null, 2));
+    console.log('Total search conditions:', searchConditions.length);
+    console.log(
+      'Final where array length:',
+      Array.isArray(where) ? where.length : 'not an array',
+    );
 
     // Build order object
     const order: any = {};
@@ -92,6 +108,25 @@ export class ClientRelationalRepository implements ClientRepository {
 
     console.log('Order conditions:', JSON.stringify(order, null, 2));
 
+    console.log('Executing query with:', {
+      where,
+      relations,
+      skip: ((filters.page || 1) - 1) * (filters.limit || 10),
+      take: filters.limit || 10,
+      order: Object.keys(order).length > 0 ? order : undefined,
+    });
+
+    // Debug: Verificar se há dados na tabela
+    const totalClients = await this.clientRepository.count();
+    console.log('Total clients in database:', totalClients);
+
+    // Debug: Mostrar alguns dados de exemplo
+    const sampleData = await this.clientRepository.find({
+      take: 3,
+      select: ['id', 'razaoSocial', 'nomeComercial', 'cnpj'],
+    });
+    console.log('Sample data from database:', sampleData);
+
     const [data, total] = await this.clientRepository.findAndCount({
       where,
       relations,
@@ -99,6 +134,8 @@ export class ClientRelationalRepository implements ClientRepository {
       take: filters.limit || 10,
       order: Object.keys(order).length > 0 ? order : undefined,
     });
+
+    console.log('Query result:', { dataCount: data.length, total });
 
     return {
       data: data.map((item) => this.mapper.toDomain(item)),

@@ -31,6 +31,16 @@ export class QueryClientDto {
   name?: string;
 
   @IsOptional()
+  @IsString()
+  @ApiProperty({
+    type: String,
+    required: false,
+    example: '12.345.678/0001-90',
+    description: 'Filter by client CNPJ',
+  })
+  cnpj?: string;
+
+  @IsOptional()
   @Transform(({ value }) => (value ? Number(value) : undefined))
   @IsNumber()
   @ApiProperty({
