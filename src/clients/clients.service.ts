@@ -23,6 +23,10 @@ export class ClientsService {
     return this.clientRepository.findById(id);
   }
 
+  async findByUserId(userId: number): Promise<Client[]> {
+    return this.clientRepository.findByUserId(userId);
+  }
+
   async update(id: number, updateClientDto: UpdateClientDto): Promise<Client> {
     return this.clientRepository.update(id, updateClientDto);
   }

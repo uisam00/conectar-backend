@@ -27,6 +27,7 @@ import { Roles } from '../roles/roles.decorator';
 import { RolesGuard } from '../roles/roles.guard';
 import { RoleEnum } from '../roles/roles.enum';
 import { AuthGuard } from '@nestjs/passport';
+import { ClientMembershipGuard } from './guards/client-membership.guard';
 
 @ApiTags('Clients')
 @ApiBearerAuth()
@@ -56,20 +57,46 @@ export class ClientsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all clients' })
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin)
+  @ApiOperation({ summary: 'Get all clients (Admin only)' })
   @ApiResponse({ status: 200, description: 'Clients retrieved successfully' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin access required',
+  })
   findAll(@Query() queryDto: QueryClientDto) {
     return this.clientsService.findMany(queryDto);
   }
 
+  @Get('user/:userId')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiOperation({ summary: 'Get clients by user ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'User clients retrieved successfully',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - User can only access their own clients',
+  })
+  findByUserId(@Param('userId', ParseIntPipe) userId: number) {
+    return this.clientsService.findByUserId(userId);
+  }
+
   @Get(':id')
-  @ApiOperation({ summary: 'Get client by id' })
+  @UseGuards(AuthGuard('jwt'), ClientMembershipGuard)
+  @ApiOperation({ summary: 'Get client by id (Client members only)' })
   @ApiResponse({
     status: 200,
     description: 'Client retrieved successfully',
     type: ClientDto,
   })
   @ApiResponse({ status: 404, description: 'Client not found' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - User must be a member of this client',
+  })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.clientsService.findById(id);
   }

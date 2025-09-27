@@ -10,6 +10,7 @@ export abstract class ClientRepository {
     limit?: number;
   }): Promise<{ data: Client[]; total: number }>;
   abstract findById(id: Client['id']): Promise<Client | null>;
+  abstract findByUserId(userId: number): Promise<Client[]>;
   abstract update(id: Client['id'], data: Partial<Client>): Promise<Client>;
   abstract delete(id: Client['id']): Promise<void>;
 }

@@ -48,9 +48,19 @@ describe('ClientsService', () => {
             getAllAndOverride: jest.fn(),
           },
         },
+        {
+          provide: 'UserClientEntityRepository',
+          useValue: {
+            findOne: jest.fn(),
+          },
+        },
       ],
     })
       .overrideGuard(RolesGuard)
+      .useValue({
+        canActivate: jest.fn(() => true),
+      })
+      .overrideGuard('ClientMembershipGuard')
       .useValue({
         canActivate: jest.fn(() => true),
       })
@@ -182,18 +192,20 @@ describe('ClientsService', () => {
       expect(deleteMetadata).toEqual([1]); // RoleEnum.admin = 1
     });
 
-    it('should allow public access to read endpoints', () => {
+    it('should have admin protection on findAll endpoint', () => {
       const findAllMetadata = Reflect.getMetadata(
         'roles',
         ClientsController.prototype.findAll,
       );
+      expect(findAllMetadata).toEqual([1]); // RoleEnum.admin = 1
+    });
+
+    it('should have membership protection on findOne endpoint', () => {
       const findOneMetadata = Reflect.getMetadata(
         'roles',
         ClientsController.prototype.findOne,
       );
-
-      expect(findAllMetadata).toBeUndefined();
-      expect(findOneMetadata).toBeUndefined();
+      expect(findOneMetadata).toBeUndefined(); // Uses ClientMembershipGuard instead of RolesGuard
     });
   });
 });

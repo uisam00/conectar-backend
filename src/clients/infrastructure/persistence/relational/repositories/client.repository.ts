@@ -59,6 +59,16 @@ export class ClientRelationalRepository implements ClientRepository {
     return entity ? this.mapper.toDomain(entity) : null;
   }
 
+  async findByUserId(userId: number): Promise<Client[]> {
+    const entities = await this.clientRepository
+      .createQueryBuilder('client')
+      .innerJoin('user_clients', 'uc', 'uc.clientId = client.id')
+      .where('uc.userId = :userId', { userId })
+      .getMany();
+
+    return entities.map((entity) => this.mapper.toDomain(entity));
+  }
+
   async update(id: Client['id'], data: Partial<Client>): Promise<Client> {
     const entity = await this.clientRepository.findOne({
       where: { id: id as number },
