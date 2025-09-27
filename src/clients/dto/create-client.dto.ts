@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsOptional, IsNumber, IsNotEmpty } from 'class-validator';
+import { IsValidCnpj } from '../validators/cnpj.validator';
 
 export class CreateClientDto {
   @IsString()
@@ -12,9 +13,11 @@ export class CreateClientDto {
 
   @IsString()
   @IsNotEmpty()
+  @IsValidCnpj({ message: 'CNPJ inválido' })
   @ApiProperty({
     type: String,
     example: '12.345.678/0001-90',
+    description: 'CNPJ da empresa (formato: XX.XXX.XXX/XXXX-XX)',
   })
   cnpj: string;
 

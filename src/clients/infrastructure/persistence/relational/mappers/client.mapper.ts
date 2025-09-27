@@ -8,7 +8,7 @@ export class ClientMapper {
     const domain = new Client();
     domain.id = raw.id;
     domain.razaoSocial = raw.razaoSocial;
-    domain.cnpj = raw.cnpj;
+    domain.cnpj = this.formatCnpj(raw.cnpj); // Formatar CNPJ na saída
     domain.nomeComercial = raw.nomeComercial;
     domain.statusId = raw.statusId;
     domain.planId = raw.planId;
@@ -27,5 +27,19 @@ export class ClientMapper {
     entity.statusId = domain.statusId;
     entity.planId = domain.planId;
     return entity;
+  }
+
+  private formatCnpj(cnpj: string): string {
+    // Se já está formatado, retorna como está
+    if (cnpj.includes('.')) {
+      return cnpj;
+    }
+
+    // Formatar CNPJ: XX.XXX.XXX/XXXX-XX
+    if (cnpj.length === 14) {
+      return `${cnpj.slice(0, 2)}.${cnpj.slice(2, 5)}.${cnpj.slice(5, 8)}/${cnpj.slice(8, 12)}-${cnpj.slice(12, 14)}`;
+    }
+
+    return cnpj;
   }
 }

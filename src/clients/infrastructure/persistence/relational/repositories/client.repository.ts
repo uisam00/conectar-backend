@@ -69,6 +69,18 @@ export class ClientRelationalRepository implements ClientRepository {
     return entities.map((entity) => this.mapper.toDomain(entity));
   }
 
+  async findByCnpj(cnpj: string): Promise<Client | null> {
+    const entity = await this.clientRepository.findOne({
+      where: { cnpj },
+    });
+
+    if (!entity) {
+      return null;
+    }
+
+    return this.mapper.toDomain(entity);
+  }
+
   async update(id: Client['id'], data: Partial<Client>): Promise<Client> {
     const entity = await this.clientRepository.findOne({
       where: { id: id as number },

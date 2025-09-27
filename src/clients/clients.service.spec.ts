@@ -29,6 +29,8 @@ describe('ClientsService', () => {
     create: jest.fn(),
     findMany: jest.fn(),
     findById: jest.fn(),
+    findByUserId: jest.fn(),
+    findByCnpj: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
   };
@@ -80,18 +82,46 @@ describe('ClientsService', () => {
     it('should create a new client', async () => {
       const createClientDto: CreateClientDto = {
         razaoSocial: 'Empresa ABC Ltda',
-        cnpj: '12.345.678/0001-90',
+        cnpj: '25.071.829/0001-06',
         nomeComercial: 'ABC Comércio',
         statusId: 1,
         planId: 1,
       };
 
+      clientRepository.findByCnpj.mockResolvedValue(null);
       clientRepository.create.mockResolvedValue(mockClient);
 
       const result = await service.create(createClientDto);
 
-      expect(clientRepository.create).toHaveBeenCalledWith(createClientDto);
+      expect(clientRepository.findByCnpj).toHaveBeenCalledWith(
+        '25071829000106',
+      ); // CNPJ normalizado
+      expect(clientRepository.create).toHaveBeenCalledWith({
+        ...createClientDto,
+        cnpj: '25071829000106', // CNPJ normalizado
+      });
       expect(result).toEqual(mockClient);
+    });
+
+    it('should throw ConflictException when CNPJ already exists', async () => {
+      const createClientDto: CreateClientDto = {
+        razaoSocial: 'Empresa ABC Ltda',
+        cnpj: '25.071.829/0001-06',
+        nomeComercial: 'ABC Comércio',
+        statusId: 1,
+        planId: 1,
+      };
+
+      clientRepository.findByCnpj.mockResolvedValue(mockClient);
+      clientRepository.create.mockClear(); // Limpar chamadas anteriores
+
+      await expect(service.create(createClientDto)).rejects.toThrow(
+        'CNPJ já cadastrado',
+      );
+      expect(clientRepository.findByCnpj).toHaveBeenCalledWith(
+        '25071829000106',
+      ); // CNPJ normalizado
+      expect(clientRepository.create).not.toHaveBeenCalled();
     });
   });
 
@@ -140,7 +170,7 @@ describe('ClientsService', () => {
   });
 
   describe('update', () => {
-    it('should update a client', async () => {
+    it('should update a client without CNPJ', async () => {
       const id = 1;
       const updateClientDto: UpdateClientDto = {
         nomeComercial: 'ABC Comércio Atualizado',
@@ -153,6 +183,72 @@ describe('ClientsService', () => {
 
       expect(clientRepository.update).toHaveBeenCalledWith(id, updateClientDto);
       expect(result).toEqual(updatedClient);
+    });
+
+    it('should update a client with CNPJ', async () => {
+      const id = 1;
+      const updateClientDto: UpdateClientDto = {
+        cnpj: '40.605.574/0001-08',
+        nomeComercial: 'ABC Comércio Atualizado',
+      };
+
+      const updatedClient = { ...mockClient, ...updateClientDto };
+      clientRepository.findByCnpj.mockResolvedValue(null);
+      clientRepository.update.mockResolvedValue(updatedClient);
+
+      const result = await service.update(id, updateClientDto);
+
+      expect(clientRepository.findByCnpj).toHaveBeenCalledWith(
+        '40605574000108',
+      ); // CNPJ normalizado
+      expect(clientRepository.update).toHaveBeenCalledWith(id, {
+        ...updateClientDto,
+        cnpj: '40605574000108', // CNPJ normalizado
+      });
+      expect(result).toEqual(updatedClient);
+    });
+
+    it('should throw ConflictException when updating to existing CNPJ', async () => {
+      const id = 1;
+      const updateClientDto: UpdateClientDto = {
+        cnpj: '40.605.574/0001-08',
+        nomeComercial: 'ABC Comércio Atualizado',
+      };
+
+      const existingClient = { ...mockClient, id: 2 }; // Diferente ID
+      clientRepository.findByCnpj.mockResolvedValue(existingClient);
+      clientRepository.update.mockClear(); // Limpar chamadas anteriores
+
+      await expect(service.update(id, updateClientDto)).rejects.toThrow(
+        'CNPJ já cadastrado',
+      );
+      expect(clientRepository.findByCnpj).toHaveBeenCalledWith(
+        '40605574000108',
+      ); // CNPJ normalizado
+      expect(clientRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('should allow updating to same CNPJ', async () => {
+      const id = 1;
+      const updateClientDto: UpdateClientDto = {
+        cnpj: '25.071.829/0001-06',
+        nomeComercial: 'ABC Comércio Atualizado',
+      };
+
+      const sameClient = { ...mockClient, id: 1 }; // Mesmo ID
+      clientRepository.findByCnpj.mockResolvedValue(sameClient);
+      clientRepository.update.mockResolvedValue(sameClient);
+
+      const result = await service.update(id, updateClientDto);
+
+      expect(clientRepository.findByCnpj).toHaveBeenCalledWith(
+        '25071829000106',
+      ); // CNPJ normalizado
+      expect(clientRepository.update).toHaveBeenCalledWith(id, {
+        ...updateClientDto,
+        cnpj: '25071829000106', // CNPJ normalizado
+      });
+      expect(result).toEqual(sameClient);
     });
   });
 
