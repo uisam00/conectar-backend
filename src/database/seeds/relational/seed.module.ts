@@ -9,6 +9,7 @@ import { StatusSeedModule } from './status/status-seed.module';
 import { UserSeedModule } from './user/user-seed.module';
 import { PlanSeedModule } from './plan/plan-seed.module';
 import { ClientSeedModule } from './client/client-seed.module';
+import { ClientRoleSeedModule } from './client-role/client-role-seed.module';
 import databaseConfig from '../../config/database.config';
 import appConfig from '../../../config/app.config';
 
@@ -19,6 +20,7 @@ import appConfig from '../../../config/app.config';
     UserSeedModule,
     PlanSeedModule,
     ClientSeedModule,
+    ClientRoleSeedModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [databaseConfig, appConfig],

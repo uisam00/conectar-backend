@@ -11,6 +11,7 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -103,6 +104,41 @@ export class ClientsController {
   })
   findAll(@Query() queryDto: QueryClientDto) {
     return this.clientsService.findMany(queryDto);
+  }
+
+  @Get('me')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiOperation({
+    summary: 'Get clients for the authenticated user',
+    description:
+      'Retrieve all clients associated with the currently authenticated user',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'User clients retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        clients: {
+          type: 'array',
+          items: { $ref: '#/components/schemas/ClientDto' },
+        },
+        userRole: {
+          type: 'object',
+          properties: {
+            id: { type: 'number' },
+            name: { type: 'string' },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
+  findMyClients(@Request() request) {
+    return this.clientsService.findMyClientsWithRole(request.user.id);
   }
 
   @Get('user/:userId')

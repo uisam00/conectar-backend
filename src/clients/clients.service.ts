@@ -43,6 +43,24 @@ export class ClientsService {
     return this.clientRepository.findByUserId(userId);
   }
 
+  async findMyClientsWithRole(
+    userId: number,
+  ): Promise<{ clients: Client[]; userRole: any }> {
+    const clients = await this.clientRepository.findByUserId(userId);
+
+    // Buscar informações do usuário incluindo a role
+    const userWithRole = await this.clientRepository.manager
+      .createQueryBuilder('users', 'u')
+      .leftJoinAndSelect('u.role', 'role')
+      .where('u.id = :userId', { userId })
+      .getOne();
+
+    return {
+      clients,
+      userRole: userWithRole?.role || null,
+    };
+  }
+
   async update(id: number, updateClientDto: UpdateClientDto): Promise<Client> {
     // Se o CNPJ está sendo atualizado, verificar se já existe
     if (updateClientDto.cnpj) {
