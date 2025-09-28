@@ -12,6 +12,7 @@ import {
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 import { StatusEntity } from '../../../../../statuses/infrastructure/persistence/relational/entities/status.entity';
 import { PlanEntity } from '../../../../../plans/infrastructure/persistence/relational/entities/plan.entity';
+import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity';
 
 @Entity({
   name: 'clients',
@@ -47,6 +48,15 @@ export class ClientEntity extends EntityRelationalHelper {
 
   @Column({ type: 'int' })
   planId: number;
+
+  @ManyToOne(() => FileEntity, {
+    eager: true,
+  })
+  @JoinColumn({ name: 'photoId' })
+  photo?: FileEntity | null;
+
+  @Column({ type: 'int', nullable: true })
+  photoId?: number | null;
 
   @CreateDateColumn()
   createdAt: Date;

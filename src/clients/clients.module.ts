@@ -3,9 +3,10 @@ import { ClientsService } from './clients.service';
 import { ClientsController } from './clients.controller';
 import { RelationalClientPersistenceModule } from './infrastructure/persistence/relational/relational-persistence.module';
 import { ClientMembershipGuard } from './guards/client-membership.guard';
+import { FilesModule } from '../files/files.module';
 
 @Module({
-  imports: [RelationalClientPersistenceModule],
+  imports: [RelationalClientPersistenceModule, FilesModule],
   controllers: [ClientsController],
   providers: [ClientsService, ClientMembershipGuard],
   exports: [ClientsService, RelationalClientPersistenceModule],

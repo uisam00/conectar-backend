@@ -1,4 +1,9 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  UnprocessableEntityException,
+  HttpStatus,
+} from '@nestjs/common';
 import { ClientRepository } from './infrastructure/persistence/client.repository';
 import { Client } from './domain/client';
 import { CreateClientDto } from './dto/create-client.dto';
@@ -6,10 +11,15 @@ import { UpdateClientDto } from './dto/update-client.dto';
 import { QueryClientDto } from './dto/query-client.dto';
 import { User } from '../users/domain/user';
 import { IPaginationOptions } from '../utils/types/pagination-options';
+import { FilesService } from '../files/files.service';
+import { FileType } from '../files/domain/file';
 
 @Injectable()
 export class ClientsService {
-  constructor(private readonly clientRepository: ClientRepository) {}
+  constructor(
+    private readonly clientRepository: ClientRepository,
+    private readonly filesService: FilesService,
+  ) {}
 
   async create(createClientDto: CreateClientDto): Promise<Client> {
     // Normalizar CNPJ (remover formatação)
@@ -22,10 +32,30 @@ export class ClientsService {
       throw new ConflictException('CNPJ já cadastrado');
     }
 
-    // Criar cliente com CNPJ normalizado
+    let photo: FileType | null | undefined = undefined;
+
+    if (createClientDto.photo?.id) {
+      const fileObject = await this.filesService.findById(
+        createClientDto.photo.id,
+      );
+      if (!fileObject) {
+        throw new UnprocessableEntityException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          errors: {
+            photo: 'imageNotExists',
+          },
+        });
+      }
+      photo = fileObject;
+    } else if (createClientDto.photo === null) {
+      photo = null;
+    }
+
+    // Criar cliente com CNPJ normalizado e foto
     const clientData = {
       ...createClientDto,
       cnpj: normalizedCnpj,
+      photo,
     };
 
     return this.clientRepository.create(clientData);
@@ -42,6 +72,25 @@ export class ClientsService {
   }
 
   async update(id: number, updateClientDto: UpdateClientDto): Promise<Client> {
+    let photo: FileType | null | undefined = undefined;
+
+    if (updateClientDto.photo?.id) {
+      const fileObject = await this.filesService.findById(
+        updateClientDto.photo.id,
+      );
+      if (!fileObject) {
+        throw new UnprocessableEntityException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          errors: {
+            photo: 'imageNotExists',
+          },
+        });
+      }
+      photo = fileObject;
+    } else if (updateClientDto.photo === null) {
+      photo = null;
+    }
+
     // Se o CNPJ está sendo atualizado, verificar se já existe
     if (updateClientDto.cnpj) {
       const normalizedCnpj = this.normalizeCnpj(updateClientDto.cnpj);
@@ -53,16 +102,23 @@ export class ClientsService {
         throw new ConflictException('CNPJ já cadastrado');
       }
 
-      // Atualizar com CNPJ normalizado
+      // Atualizar com CNPJ normalizado e foto
       const updateData = {
         ...updateClientDto,
         cnpj: normalizedCnpj,
+        photo,
       };
 
       return this.clientRepository.update(id, updateData);
     }
 
-    return this.clientRepository.update(id, updateClientDto);
+    // Atualizar com foto
+    const updateData = {
+      ...updateClientDto,
+      photo,
+    };
+
+    return this.clientRepository.update(id, updateData);
   }
 
   async delete(id: number): Promise<void> {

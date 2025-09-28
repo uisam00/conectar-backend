@@ -1,6 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsOptional, IsNumber, IsNotEmpty } from 'class-validator';
 import { IsValidCnpj } from '../validators/cnpj.validator';
+import { FileDto } from '../../files/dto/file.dto';
 
 export class CreateClientDto {
   @IsString()
@@ -45,4 +46,8 @@ export class CreateClientDto {
     example: 1,
   })
   planId: number;
+
+  @ApiPropertyOptional({ type: () => FileDto })
+  @IsOptional()
+  photo?: FileDto | null;
 }
