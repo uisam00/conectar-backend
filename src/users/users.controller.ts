@@ -166,33 +166,6 @@ export class UsersController {
       'Retrieve all clients associated with the currently authenticated user',
   })
   @ApiResponse({
-    status: 200,
-    description: 'User clients retrieved successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        clients: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              id: { type: 'number' },
-              name: { type: 'string' },
-              cnpj: { type: 'string' },
-              status: { type: 'string' },
-              createdAt: { type: 'string' },
-              updatedAt: { type: 'string' },
-            },
-          },
-        },
-        userRole: {
-          type: 'object',
-          nullable: true,
-        },
-      },
-    },
-  })
-  @ApiResponse({
     status: 401,
     description: 'Unauthorized - Invalid or missing JWT token',
   })
