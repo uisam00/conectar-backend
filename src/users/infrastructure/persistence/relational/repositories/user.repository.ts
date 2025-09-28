@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { Repository, In } from 'typeorm';
+import { Repository, In, Like } from 'typeorm';
 import { UserEntity } from '../entities/user.entity';
 import { NullableType } from '../../../../../utils/types/nullable.type';
 import { User } from '../../../../domain/user';
@@ -51,72 +51,163 @@ export class UsersRelationalRepository implements UserRepository {
     sortOrder?: 'ASC' | 'DESC';
     paginationOptions: IPaginationOptions;
   }): Promise<User[]> {
-    const queryBuilder = this.usersRepository
-      .createQueryBuilder('user')
-      .leftJoinAndSelect('user.role', 'role')
-      .leftJoinAndSelect('user.status', 'status')
-      .leftJoinAndSelect('user.photo', 'photo');
+    // Construir condições WHERE
+    const whereConditions: any = {};
+    const relations = ['role', 'status', 'photo'];
 
-    // Filtro por busca geral (firstName, lastName, email)
-    if (search) {
-      queryBuilder.andWhere(
-        '(user.firstName ILIKE :search OR user.lastName ILIKE :search OR user.email ILIKE :search)',
-        { search: `%${search}%` },
-      );
-    }
-
-    // Filtros específicos
-    if (firstName) {
-      queryBuilder.andWhere('user.firstName ILIKE :firstName', {
-        firstName: `%${firstName}%`,
-      });
-    }
-    if (lastName) {
-      queryBuilder.andWhere('user.lastName ILIKE :lastName', {
-        lastName: `%${lastName}%`,
-      });
-    }
-    if (email) {
-      queryBuilder.andWhere('user.email ILIKE :email', {
-        email: `%${email}%`,
-      });
-    }
+    // Filtros básicos
     if (roleId) {
-      queryBuilder.andWhere('role.id = :roleId', { roleId });
+      whereConditions.role = { id: roleId };
     }
     if (statusId) {
-      queryBuilder.andWhere('status.id = :statusId', { statusId });
+      whereConditions.status = { id: statusId };
     }
     if (systemRoleId) {
-      queryBuilder.andWhere('role.id = :systemRoleId', { systemRoleId });
+      whereConditions.role = { id: systemRoleId };
     }
 
-    // Para filtros de cliente e role do cliente
-    if (clientId || clientRoleId) {
-      queryBuilder.leftJoin('user_clients', 'uc', 'uc.userId = user.id');
+    // Filtros de texto
+    const textConditions: any[] = [];
+    if (search) {
+      textConditions.push(
+        { firstName: Like(`%${search}%`) },
+        { lastName: Like(`%${search}%`) },
+        { email: Like(`%${search}%`) },
+      );
+    }
+    if (firstName) {
+      textConditions.push({ firstName: Like(`%${firstName}%`) });
+    }
+    if (lastName) {
+      textConditions.push({ lastName: Like(`%${lastName}%`) });
+    }
+    if (email) {
+      textConditions.push({ email: Like(`%${email}%`) });
+    }
 
-      if (clientId) {
-        queryBuilder.andWhere('uc.clientId = :clientId', { clientId });
-      }
-      if (clientRoleId) {
-        queryBuilder.andWhere('uc.clientRoleId = :clientRoleId', {
-          clientRoleId,
-        });
-      }
+    // Combinar condições
+    let where: any = whereConditions;
+    if (textConditions.length > 0) {
+      where = { ...whereConditions, $or: textConditions };
     }
 
     // Ordenação
+    const order: any = {};
     if (sortBy && sortOrder) {
-      queryBuilder.orderBy(`user.${sortBy}`, sortOrder);
+      order[sortBy] = sortOrder;
     }
 
-    // Paginação
-    queryBuilder
-      .skip((paginationOptions.page - 1) * paginationOptions.limit)
-      .take(paginationOptions.limit);
+    // Buscar usuários
+    const [entities] = await this.usersRepository.findAndCount({
+      where,
+      relations,
+      skip: (paginationOptions.page - 1) * paginationOptions.limit,
+      take: paginationOptions.limit,
+      order: Object.keys(order).length > 0 ? order : undefined,
+    });
 
-    const entities = await queryBuilder.getMany();
-    return entities.map((user) => UserMapper.toDomain(user));
+    // Se há filtros de cliente, buscar dados de clientes separadamente
+    if (clientId || clientRoleId) {
+      const userIds = entities.map((user) => user.id);
+
+      // Buscar associações de cliente
+      const userClients = await this.usersRepository
+        .createQueryBuilder('user')
+        .leftJoin('user_clients', 'uc', 'uc.userId = user.id')
+        .leftJoin('clients', 'client', 'client.id = uc.clientId')
+        .select([
+          'user.id',
+          'client.id',
+          'client.razaoSocial',
+          'client.nomeComercial',
+          'client.cnpj',
+          'uc.clientRoleId',
+        ])
+        .where('user.id IN (:...userIds)', { userIds })
+        .andWhere(clientId ? 'uc.clientId = :clientId' : '1=1', { clientId })
+        .andWhere(clientRoleId ? 'uc.clientRoleId = :clientRoleId' : '1=1', {
+          clientRoleId,
+        })
+        .getRawMany();
+
+      // Filtrar usuários que têm as associações corretas
+      const validUserIds = new Set(userClients.map((uc) => uc.user_id));
+      const filteredEntities = entities.filter((user) =>
+        validUserIds.has(user.id),
+      );
+
+      // Buscar clientes para os usuários filtrados
+      const usersWithClients = await Promise.all(
+        filteredEntities.map(async (user) => {
+          const domainUser = UserMapper.toDomain(user);
+
+          // Buscar clientes associados ao usuário
+          const userClientsData = await this.usersRepository
+            .createQueryBuilder('user')
+            .leftJoin('user_clients', 'uc', 'uc.userId = user.id')
+            .leftJoin('clients', 'client', 'client.id = uc.clientId')
+            .select([
+              'client.id',
+              'client.razaoSocial',
+              'client.nomeComercial',
+              'client.cnpj',
+              'uc.clientRoleId',
+            ])
+            .where('user.id = :userId', { userId: user.id })
+            .getRawMany();
+
+          (domainUser as any).clients = userClientsData
+            .map((uc) => ({
+              id: uc.client_id,
+              razaoSocial: uc.client_razaoSocial,
+              nomeComercial: uc.client_nomeComercial,
+              cnpj: uc.client_cnpj,
+              clientRoleId: uc.uc_clientRoleId,
+            }))
+            .filter((client) => client.id !== null);
+
+          return domainUser;
+        }),
+      );
+
+      return usersWithClients;
+    }
+
+    // Buscar clientes associados para todos os usuários
+    const usersWithClients = await Promise.all(
+      entities.map(async (user) => {
+        const domainUser = UserMapper.toDomain(user);
+
+        // Buscar clientes associados ao usuário
+        const userClients = await this.usersRepository
+          .createQueryBuilder('user')
+          .leftJoin('user_clients', 'uc', 'uc.userId = user.id')
+          .leftJoin('clients', 'client', 'client.id = uc.clientId')
+          .select([
+            'client.id',
+            'client.razaoSocial',
+            'client.nomeComercial',
+            'client.cnpj',
+            'uc.clientRoleId',
+          ])
+          .where('user.id = :userId', { userId: user.id })
+          .getRawMany();
+
+        (domainUser as any).clients = userClients
+          .map((uc) => ({
+            id: uc.client_id,
+            razaoSocial: uc.client_razaoSocial,
+            nomeComercial: uc.client_nomeComercial,
+            cnpj: uc.client_cnpj,
+            clientRoleId: uc.uc_clientRoleId,
+          }))
+          .filter((client) => client.id !== null);
+
+        return domainUser;
+      }),
+    );
+
+    return usersWithClients;
   }
 
   async findById(id: User['id']): Promise<NullableType<User>> {

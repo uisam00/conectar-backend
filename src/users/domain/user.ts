@@ -61,6 +61,20 @@ export class User {
   })
   status?: Status;
 
+  @ApiProperty({
+    type: Array,
+    description: 'Clientes associados ao usuário (apenas para admins)',
+    required: false,
+  })
+  @Expose({ groups: ['admin'] })
+  clients?: Array<{
+    id: number;
+    razaoSocial: string;
+    nomeComercial: string;
+    cnpj: string;
+    clientRoleId: number;
+  }>;
+
   @ApiProperty()
   createdAt: Date;
 
