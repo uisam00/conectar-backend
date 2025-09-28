@@ -3,20 +3,36 @@ import { NullableType } from '../../../utils/types/nullable.type';
 import { IPaginationOptions } from '../../../utils/types/pagination-options';
 import { User } from '../../domain/user';
 
-import { FilterUserDto, SortUserDto } from '../../dto/query-user.dto';
-
 export abstract class UserRepository {
   abstract create(
     data: Omit<User, 'id' | 'createdAt' | 'deletedAt' | 'updatedAt'>,
   ): Promise<User>;
 
   abstract findManyWithPagination({
-    filterOptions,
-    sortOptions,
+    search,
+    firstName,
+    lastName,
+    email,
+    roleId,
+    statusId,
+    clientId,
+    systemRoleId,
+    clientRoleId,
+    sortBy,
+    sortOrder,
     paginationOptions,
   }: {
-    filterOptions?: FilterUserDto | null;
-    sortOptions?: SortUserDto[] | null;
+    search?: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    roleId?: number;
+    statusId?: number;
+    clientId?: number;
+    systemRoleId?: number;
+    clientRoleId?: number;
+    sortBy?: string;
+    sortOrder?: 'ASC' | 'DESC';
     paginationOptions: IPaginationOptions;
   }): Promise<User[]>;
 

@@ -84,8 +84,17 @@ export class UsersController {
 
     return infinityPagination(
       await this.usersService.findManyWithPagination({
-        filterOptions: query?.filters,
-        sortOptions: query?.sort,
+        search: query?.search,
+        firstName: query?.firstName,
+        lastName: query?.lastName,
+        email: query?.email,
+        roleId: query?.roleId,
+        statusId: query?.statusId,
+        clientId: query?.clientId,
+        systemRoleId: query?.systemRoleId,
+        clientRoleId: query?.clientRoleId,
+        sortBy: query?.sortBy,
+        sortOrder: query?.sortOrder,
         paginationOptions: {
           page,
           limit,

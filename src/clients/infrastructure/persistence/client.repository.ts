@@ -1,5 +1,4 @@
 import { Client } from '../../domain/client';
-import { FilterUserDto, SortUserDto } from '../../../users/dto/query-user.dto';
 import { User } from '../../../users/domain/user';
 import { IPaginationOptions } from '../../../utils/types/pagination-options';
 
@@ -20,12 +19,28 @@ export abstract class ClientRepository {
   abstract findUsersByClient(
     clientId: number,
     {
-      filterOptions,
-      sortOptions,
+      search,
+      firstName,
+      lastName,
+      email,
+      roleId,
+      statusId,
+      systemRoleId,
+      clientRoleId,
+      sortBy,
+      sortOrder,
       paginationOptions,
     }: {
-      filterOptions?: FilterUserDto | null;
-      sortOptions?: SortUserDto[] | null;
+      search?: string;
+      firstName?: string;
+      lastName?: string;
+      email?: string;
+      roleId?: number;
+      statusId?: number;
+      systemRoleId?: number;
+      clientRoleId?: number;
+      sortBy?: string;
+      sortOrder?: 'ASC' | 'DESC';
       paginationOptions: IPaginationOptions;
     },
   ): Promise<User[]>;

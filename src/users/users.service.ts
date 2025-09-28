@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { NullableType } from '../utils/types/nullable.type';
-import { FilterUserDto, SortUserDto } from './dto/query-user.dto';
 import { UserRepository } from './infrastructure/persistence/user.repository';
 import { User } from './domain/user';
 import bcrypt from 'bcryptjs';
@@ -131,17 +130,44 @@ export class UsersService {
   }
 
   findManyWithPagination({
-    filterOptions,
-    sortOptions,
+    search,
+    firstName,
+    lastName,
+    email,
+    roleId,
+    statusId,
+    clientId,
+    systemRoleId,
+    clientRoleId,
+    sortBy,
+    sortOrder,
     paginationOptions,
   }: {
-    filterOptions?: FilterUserDto | null;
-    sortOptions?: SortUserDto[] | null;
+    search?: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    roleId?: number;
+    statusId?: number;
+    clientId?: number;
+    systemRoleId?: number;
+    clientRoleId?: number;
+    sortBy?: string;
+    sortOrder?: 'ASC' | 'DESC';
     paginationOptions: IPaginationOptions;
   }): Promise<User[]> {
     return this.usersRepository.findManyWithPagination({
-      filterOptions,
-      sortOptions,
+      search,
+      firstName,
+      lastName,
+      email,
+      roleId,
+      statusId,
+      clientId,
+      systemRoleId,
+      clientRoleId,
+      sortBy,
+      sortOrder,
       paginationOptions,
     });
   }

@@ -248,8 +248,16 @@ export class ClientsController {
 
     return infinityPagination(
       await this.clientsService.findUsersByClient(clientId, {
-        filterOptions: query?.filters,
-        sortOptions: query?.sort,
+        search: query?.search,
+        firstName: query?.firstName,
+        lastName: query?.lastName,
+        email: query?.email,
+        roleId: query?.roleId,
+        statusId: query?.statusId,
+        systemRoleId: query?.systemRoleId,
+        clientRoleId: query?.clientRoleId,
+        sortBy: query?.sortBy,
+        sortOrder: query?.sortOrder,
         paginationOptions: {
           page,
           limit,

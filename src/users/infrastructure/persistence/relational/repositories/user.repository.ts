@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { FindOptionsWhere, Repository, In } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { UserEntity } from '../entities/user.entity';
 import { NullableType } from '../../../../../utils/types/nullable.type';
-import { FilterUserDto, SortUserDto } from '../../../../dto/query-user.dto';
 import { User } from '../../../../domain/user';
 import { UserRepository } from '../../user.repository';
 import { UserMapper } from '../mappers/user.mapper';
@@ -26,82 +25,97 @@ export class UsersRelationalRepository implements UserRepository {
   }
 
   async findManyWithPagination({
-    filterOptions,
-    sortOptions,
+    search,
+    firstName,
+    lastName,
+    email,
+    roleId,
+    statusId,
+    clientId,
+    systemRoleId,
+    clientRoleId,
+    sortBy,
+    sortOrder,
     paginationOptions,
   }: {
-    filterOptions?: FilterUserDto | null;
-    sortOptions?: SortUserDto[] | null;
+    search?: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    roleId?: number;
+    statusId?: number;
+    clientId?: number;
+    systemRoleId?: number;
+    clientRoleId?: number;
+    sortBy?: string;
+    sortOrder?: 'ASC' | 'DESC';
     paginationOptions: IPaginationOptions;
   }): Promise<User[]> {
-    const where: FindOptionsWhere<UserEntity> = {};
-    const relations = ['role', 'status', 'photo'];
+    const queryBuilder = this.usersRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.role', 'role')
+      .leftJoinAndSelect('user.status', 'status')
+      .leftJoinAndSelect('user.photo', 'photo');
 
-    // Filtro por roles do sistema
-    if (filterOptions?.roles?.length) {
-      where.role = filterOptions.roles.map((role) => ({
-        id: Number(role.id),
-      }));
+    // Filtro por busca geral (firstName, lastName, email)
+    if (search) {
+      queryBuilder.andWhere(
+        '(user.firstName ILIKE :search OR user.lastName ILIKE :search OR user.email ILIKE :search)',
+        { search: `%${search}%` },
+      );
     }
 
-    // Filtro por role do sistema específico
-    if (filterOptions?.systemRoleId) {
-      where.role = { id: filterOptions.systemRoleId };
-    }
-
-    // Para filtros de cliente e role do cliente, precisamos usar uma abordagem diferente
-    // pois não são campos diretos da entidade User
-    let userIds: number[] | undefined;
-
-    if (filterOptions?.clientId || filterOptions?.clientRoleId) {
-      // Buscar IDs dos usuários que atendem aos critérios de cliente/role do cliente
-      const userClientQuery = this.usersRepository
-        .createQueryBuilder('user')
-        .select('user.id')
-        .leftJoin('user_clients', 'uc', 'uc.userId = user.id');
-
-      if (filterOptions?.clientId) {
-        userClientQuery.andWhere('uc.clientId = :clientId', {
-          clientId: filterOptions.clientId,
-        });
-      }
-
-      if (filterOptions?.clientRoleId) {
-        userClientQuery.andWhere('uc.clientRoleId = :clientRoleId', {
-          clientRoleId: filterOptions.clientRoleId,
-        });
-      }
-
-      const userClientResults = await userClientQuery.getMany();
-      userIds = userClientResults.map((user) => user.id);
-
-      // Se não encontrou usuários com os critérios de cliente, retornar array vazio
-      if (userIds.length === 0) {
-        return [];
-      }
-    }
-
-    // Aplicar filtro de IDs se necessário
-    if (userIds) {
-      where.id = In(userIds);
-    }
-
-    // Construir ordenação
-    const order: any = {};
-    if (sortOptions?.length) {
-      sortOptions.forEach((sort) => {
-        order[sort.orderBy] = sort.order.toUpperCase();
+    // Filtros específicos
+    if (firstName) {
+      queryBuilder.andWhere('user.firstName ILIKE :firstName', {
+        firstName: `%${firstName}%`,
       });
     }
+    if (lastName) {
+      queryBuilder.andWhere('user.lastName ILIKE :lastName', {
+        lastName: `%${lastName}%`,
+      });
+    }
+    if (email) {
+      queryBuilder.andWhere('user.email ILIKE :email', {
+        email: `%${email}%`,
+      });
+    }
+    if (roleId) {
+      queryBuilder.andWhere('role.id = :roleId', { roleId });
+    }
+    if (statusId) {
+      queryBuilder.andWhere('status.id = :statusId', { statusId });
+    }
+    if (systemRoleId) {
+      queryBuilder.andWhere('role.id = :systemRoleId', { systemRoleId });
+    }
 
-    const entities = await this.usersRepository.find({
-      where,
-      relations,
-      skip: (paginationOptions.page - 1) * paginationOptions.limit,
-      take: paginationOptions.limit,
-      order: Object.keys(order).length > 0 ? order : undefined,
-    });
+    // Para filtros de cliente e role do cliente
+    if (clientId || clientRoleId) {
+      queryBuilder.leftJoin('user_clients', 'uc', 'uc.userId = user.id');
 
+      if (clientId) {
+        queryBuilder.andWhere('uc.clientId = :clientId', { clientId });
+      }
+      if (clientRoleId) {
+        queryBuilder.andWhere('uc.clientRoleId = :clientRoleId', {
+          clientRoleId,
+        });
+      }
+    }
+
+    // Ordenação
+    if (sortBy && sortOrder) {
+      queryBuilder.orderBy(`user.${sortBy}`, sortOrder);
+    }
+
+    // Paginação
+    queryBuilder
+      .skip((paginationOptions.page - 1) * paginationOptions.limit)
+      .take(paginationOptions.limit);
+
+    const entities = await queryBuilder.getMany();
     return entities.map((user) => UserMapper.toDomain(user));
   }
 
