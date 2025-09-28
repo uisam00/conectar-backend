@@ -43,7 +43,7 @@ export class ClientRelationalRepository implements ClientRepository {
     sortOrder?: 'ASC' | 'DESC';
   }): Promise<{ data: Client[]; total: number }> {
     const whereConditions: any = {};
-    const relations = ['status', 'plan'];
+    const relations = ['status', 'plan', 'photo'];
 
     // Status filter
     if (filters.statusId) {
@@ -152,6 +152,7 @@ export class ClientRelationalRepository implements ClientRepository {
   async findById(id: Client['id']): Promise<Client | null> {
     const entity = await this.clientRepository.findOne({
       where: { id: id as number },
+      relations: ['status', 'plan', 'photo'],
     });
 
     return entity ? this.mapper.toDomain(entity) : null;
