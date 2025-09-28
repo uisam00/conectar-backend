@@ -10,6 +10,7 @@ import {
   IsNotEmpty,
   IsOptional,
   MinLength,
+  IsArray,
 } from 'class-validator';
 import { FileDto } from '../../files/dto/file.dto';
 import { RoleDto } from '../../roles/dto/role.dto';
@@ -52,4 +53,23 @@ export class CreateUserDto {
   @IsOptional()
   @Type(() => StatusDto)
   status?: StatusDto;
+
+  @ApiPropertyOptional({
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        clientId: { type: 'number' },
+        clientRoleId: { type: 'number' },
+      },
+    },
+    example: [
+      { clientId: 1, clientRoleId: 2 },
+      { clientId: 2, clientRoleId: 1 },
+    ],
+    description: 'Lista de associações cliente-role para o usuário',
+  })
+  @IsOptional()
+  @IsArray()
+  clientRoles?: { clientId: number; clientRoleId: number }[];
 }

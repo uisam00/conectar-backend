@@ -1,4 +1,5 @@
 {
   "confirmEmail": "Confirmar Email",
-  "resetPassword": "Redefinir Senha"
+  "resetPassword": "Redefinir Senha",
+  "userCreated": "Conta Criada com Sucesso"
 }

@@ -16,11 +16,34 @@ export class UsersRelationalRepository implements UserRepository {
     private readonly usersRepository: Repository<UserEntity>,
   ) {}
 
-  async create(data: User): Promise<User> {
+  async create(
+    data: User & {
+      clientAssociations?: { clientId: number; clientRoleId?: number }[];
+    },
+  ): Promise<User> {
     const persistenceModel = UserMapper.toPersistence(data);
     const newEntity = await this.usersRepository.save(
       this.usersRepository.create(persistenceModel),
     );
+
+    // Criar associações com clientes se fornecidas
+    if (data.clientAssociations && data.clientAssociations.length > 0) {
+      const userClientData = data.clientAssociations.map(
+        ({ clientId, clientRoleId }) => ({
+          userId: newEntity.id,
+          clientId,
+          clientRoleId,
+        }),
+      );
+
+      await this.usersRepository.manager
+        .createQueryBuilder()
+        .insert()
+        .into('user_clients')
+        .values(userClientData)
+        .execute();
+    }
+
     return UserMapper.toDomain(newEntity);
   }
 

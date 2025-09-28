@@ -1,0 +1,8 @@
+{
+  "text1": "Olá {firstName}!",
+  "text2": "Sua conta foi criada com sucesso em nossa plataforma.",
+  "text3": "Para acessar sua conta, utilize as credenciais temporárias abaixo:",
+  "text4": "Senha temporária:",
+  "text5": "Por motivos de segurança, recomendamos que você altere esta senha no seu primeiro acesso.",
+  "text6": "Após fazer login, você poderá alterar sua senha nas configurações da sua conta."
+}

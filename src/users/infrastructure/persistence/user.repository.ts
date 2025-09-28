@@ -5,7 +5,9 @@ import { User } from '../../domain/user';
 
 export abstract class UserRepository {
   abstract create(
-    data: Omit<User, 'id' | 'createdAt' | 'deletedAt' | 'updatedAt'>,
+    data: Omit<User, 'id' | 'createdAt' | 'deletedAt' | 'updatedAt'> & {
+      clientAssociations?: { clientId: number; clientRoleId?: number }[];
+    },
   ): Promise<User>;
 
   abstract findManyWithPagination({

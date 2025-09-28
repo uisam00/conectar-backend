@@ -18,6 +18,11 @@ import { Role } from '../roles/domain/role';
 import { Status } from '../statuses/domain/status';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ClientRepository } from '../clients/infrastructure/persistence/client.repository';
+import { MailService } from '../mail/mail.service';
+import { randomStringGenerator } from '@nestjs/common/utils/random-string-generator.util';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { AllConfigType } from '../config/config.type';
 
 @Injectable()
 export class UsersService {
@@ -25,18 +30,19 @@ export class UsersService {
     private readonly usersRepository: UserRepository,
     private readonly filesService: FilesService,
     private readonly clientRepository: ClientRepository,
+    private readonly mailService: MailService,
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService<AllConfigType>,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
     // Do not remove comment below.
     // <creating-property />
 
-    let password: string | undefined = undefined;
-
-    if (createUserDto.password) {
-      const salt = await bcrypt.genSalt();
-      password = await bcrypt.hash(createUserDto.password, salt);
-    }
+    // Gerar senha temporária se não for fornecida
+    const temporaryPassword = createUserDto.password || randomStringGenerator();
+    const salt = await bcrypt.genSalt();
+    const password = await bcrypt.hash(temporaryPassword, salt);
 
     let email: string | null = null;
 
@@ -114,7 +120,11 @@ export class UsersService {
       };
     }
 
-    return this.usersRepository.create({
+    // Verificar clientes e roles antes de criar o usuário
+    const clientAssociations =
+      await this.prepareClientAssociations(createUserDto);
+
+    const user = await this.usersRepository.create({
       // Do not remove comment below.
       // <creating-property-payload />
       firstName: createUserDto.firstName,
@@ -126,7 +136,51 @@ export class UsersService {
       status: status,
       provider: createUserDto.provider ?? AuthProvidersEnum.email,
       socialId: createUserDto.socialId,
+      clientAssociations, // Incluir associações diretamente
     });
+
+    // Enviar email apropriado baseado no status do usuário
+    if (email && createUserDto.firstName) {
+      if (status?.id === StatusEnum.inactive) {
+        // Se status for inativo, enviar email com senha temporária + confirmação
+        const hash = await this.jwtService.signAsync(
+          {
+            confirmEmailUserId: user.id,
+          },
+          {
+            secret: this.configService.getOrThrow('auth.confirmEmailSecret', {
+              infer: true,
+            }),
+            expiresIn: this.configService.getOrThrow(
+              'auth.confirmEmailExpires',
+              {
+                infer: true,
+              },
+            ),
+          },
+        );
+
+        await this.mailService.userCreatedWithConfirmation({
+          to: email,
+          data: {
+            firstName: createUserDto.firstName,
+            temporaryPassword: temporaryPassword,
+            hash,
+          },
+        });
+      } else {
+        // Se status for ativo, enviar email com senha temporária (sem confirmação)
+        await this.mailService.userCreated({
+          to: email,
+          data: {
+            firstName: createUserDto.firstName,
+            temporaryPassword: temporaryPassword,
+          },
+        });
+      }
+    }
+
+    return user;
   }
 
   findManyWithPagination({
@@ -320,5 +374,29 @@ export class UsersService {
       clients,
       userRole: null, // Simplificado por enquanto
     };
+  }
+
+  private async prepareClientAssociations(
+    createUserDto: CreateUserDto,
+  ): Promise<{ clientId: number; clientRoleId?: number }[]> {
+    const associations: { clientId: number; clientRoleId?: number }[] = [];
+
+    // Processar clientRoles (com roles específicas)
+    if (createUserDto.clientRoles && createUserDto.clientRoles.length > 0) {
+      for (const { clientId, clientRoleId } of createUserDto.clientRoles) {
+        const client = await this.clientRepository.findById(clientId);
+        if (!client) {
+          throw new UnprocessableEntityException({
+            status: HttpStatus.UNPROCESSABLE_ENTITY,
+            errors: {
+              clientRoles: `Cliente com ID ${clientId} não encontrado`,
+            },
+          });
+        }
+        associations.push({ clientId, clientRoleId });
+      }
+    }
+
+    return associations;
   }
 }

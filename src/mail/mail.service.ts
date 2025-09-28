@@ -171,4 +171,151 @@ export class MailService {
       },
     });
   }
+
+  async userCreated(
+    mailData: MailData<{
+      firstName: string;
+      temporaryPassword: string;
+    }>,
+  ): Promise<void> {
+    try {
+      const i18n = I18nContext.current();
+      let userCreatedTitle: MaybeType<string>;
+      let text1: MaybeType<string>;
+      let text2: MaybeType<string>;
+      let text3: MaybeType<string>;
+      let text4: MaybeType<string>;
+      let text5: MaybeType<string>;
+      let text6: MaybeType<string>;
+
+      if (i18n) {
+        [userCreatedTitle, text1, text2, text3, text4, text5, text6] =
+          await Promise.all([
+            i18n.t('common.userCreated'),
+            i18n.t('user-created.text1', {
+              args: { firstName: mailData.data.firstName },
+            }),
+            i18n.t('user-created.text2'),
+            i18n.t('user-created.text3'),
+            i18n.t('user-created.text4'),
+            i18n.t('user-created.text5'),
+            i18n.t('user-created.text6'),
+          ]);
+      }
+
+      const url = new URL(
+        this.configService.getOrThrow('app.frontendDomain', {
+          infer: true,
+        }) + '/login',
+      );
+
+      await this.mailerService.sendMail({
+        to: mailData.to,
+        subject: userCreatedTitle,
+        text: `${url.toString()} ${userCreatedTitle}`,
+        templatePath: path.join(
+          this.configService.getOrThrow('app.workingDirectory', {
+            infer: true,
+          }),
+          'src',
+          'mail',
+          'mail-templates',
+          'user-created.hbs',
+        ),
+        context: {
+          title: userCreatedTitle,
+          url: url.toString(),
+          actionTitle: 'Acessar Plataforma',
+          app_name: this.configService.get('app.name', { infer: true }),
+          firstName: mailData.data.firstName,
+          temporaryPassword: mailData.data.temporaryPassword,
+          text1,
+          text2,
+          text3,
+          text4,
+          text5,
+          text6,
+        },
+      });
+    } catch (error) {
+      console.warn('Failed to send user created email:', error.message);
+      // Don't throw the error to prevent user creation from failing
+    }
+  }
+
+  async userCreatedWithConfirmation(
+    mailData: MailData<{
+      firstName: string;
+      temporaryPassword: string;
+      hash: string;
+    }>,
+  ): Promise<void> {
+    try {
+      const i18n = I18nContext.current();
+      let userCreatedTitle: MaybeType<string>;
+      let text1: MaybeType<string>;
+      let text2: MaybeType<string>;
+      let text3: MaybeType<string>;
+      let text4: MaybeType<string>;
+      let text5: MaybeType<string>;
+      let text6: MaybeType<string>;
+
+      if (i18n) {
+        [userCreatedTitle, text1, text2, text3, text4, text5, text6] =
+          await Promise.all([
+            i18n.t('common.userCreated'),
+            i18n.t('user-created.text1', {
+              args: { firstName: mailData.data.firstName },
+            }),
+            i18n.t('user-created.text2'),
+            i18n.t('user-created.text3'),
+            i18n.t('user-created.text4'),
+            i18n.t('user-created.text5'),
+            i18n.t('user-created.text6'),
+          ]);
+      }
+
+      const confirmUrl = new URL(
+        this.configService.getOrThrow('app.frontendDomain', {
+          infer: true,
+        }) + '/confirm-email',
+      );
+      confirmUrl.searchParams.set('hash', mailData.data.hash);
+
+      await this.mailerService.sendMail({
+        to: mailData.to,
+        subject: userCreatedTitle,
+        text: `${confirmUrl.toString()} ${userCreatedTitle}`,
+        templatePath: path.join(
+          this.configService.getOrThrow('app.workingDirectory', {
+            infer: true,
+          }),
+          'src',
+          'mail',
+          'mail-templates',
+          'user-created.hbs',
+        ),
+        context: {
+          title: userCreatedTitle,
+          url: confirmUrl.toString(),
+          actionTitle: 'Confirmar Email',
+          app_name: this.configService.get('app.name', { infer: true }),
+          firstName: mailData.data.firstName,
+          temporaryPassword: mailData.data.temporaryPassword,
+          text1,
+          text2,
+          text3,
+          text4,
+          text5,
+          text6,
+        },
+      });
+    } catch (error) {
+      console.warn(
+        'Failed to send user created with confirmation email:',
+        error.message,
+      );
+      // Don't throw the error to prevent user creation from failing
+    }
+  }
 }
