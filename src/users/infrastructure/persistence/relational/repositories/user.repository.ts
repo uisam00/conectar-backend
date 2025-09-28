@@ -110,6 +110,11 @@ export class UsersRelationalRepository implements UserRepository {
     if (clientId || clientRoleId) {
       const userIds = entities.map((user) => user.id);
 
+      // Se não há usuários, retornar array vazio
+      if (userIds.length === 0) {
+        return [];
+      }
+
       // Buscar associações de cliente
       const userClients = await this.usersRepository
         .createQueryBuilder('user')
