@@ -301,6 +301,88 @@ export class UsersRelationalRepository implements UserRepository {
     return UserMapper.toDomain(updatedEntity);
   }
 
+  async findMany(filters: {
+    search?: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    roleId?: number;
+    statusId?: number;
+    clientId?: number;
+    systemRoleId?: number;
+    clientRoleId?: number;
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: 'ASC' | 'DESC';
+  }): Promise<{ data: User[]; total: number }> {
+    const whereConditions: any = {};
+    const relations = ['role', 'status', 'photo'];
+
+    // Status filter
+    if (filters.statusId) {
+      whereConditions.statusId = filters.statusId;
+    }
+
+    // Role filter
+    if (filters.roleId) {
+      whereConditions.roleId = filters.roleId;
+    }
+
+    // Search conditions
+    const searchConditions: any[] = [];
+
+    if (filters.search) {
+      searchConditions.push(
+        { firstName: Like(`%${filters.search}%`) },
+        { lastName: Like(`%${filters.search}%`) },
+        { email: Like(`%${filters.search}%`) },
+      );
+    }
+
+    if (filters.firstName) {
+      searchConditions.push({ firstName: Like(`%${filters.firstName}%`) });
+    }
+
+    if (filters.lastName) {
+      searchConditions.push({ lastName: Like(`%${filters.lastName}%`) });
+    }
+
+    if (filters.email) {
+      searchConditions.push({ email: Like(`%${filters.email}%`) });
+    }
+
+    // Combine where conditions
+    let where: any;
+    if (searchConditions.length > 0) {
+      where = searchConditions.map((searchCondition) => ({
+        ...whereConditions,
+        ...searchCondition,
+      }));
+    } else {
+      where = whereConditions;
+    }
+
+    // Build order object
+    const order: any = {};
+    if (filters.sortBy && filters.sortOrder) {
+      order[filters.sortBy] = filters.sortOrder;
+    }
+
+    const [data, total] = await this.usersRepository.findAndCount({
+      where,
+      relations,
+      skip: ((filters.page || 1) - 1) * (filters.limit || 10),
+      take: filters.limit || 10,
+      order: Object.keys(order).length > 0 ? order : undefined,
+    });
+
+    return {
+      data: data.map((item) => UserMapper.toDomain(item)),
+      total,
+    };
+  }
+
   async remove(id: User['id']): Promise<void> {
     await this.usersRepository.softDelete(id);
   }

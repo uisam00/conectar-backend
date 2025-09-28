@@ -55,8 +55,8 @@ export class ClientEntity extends EntityRelationalHelper {
   @JoinColumn({ name: 'photoId' })
   photo?: FileEntity | null;
 
-  @Column({ type: 'int', nullable: true })
-  photoId?: number | null;
+  @Column({ type: 'uuid', nullable: true })
+  photoId?: string | null;
 
   @CreateDateColumn()
   createdAt: Date;

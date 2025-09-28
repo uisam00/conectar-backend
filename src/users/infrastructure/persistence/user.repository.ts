@@ -38,6 +38,22 @@ export abstract class UserRepository {
     paginationOptions: IPaginationOptions;
   }): Promise<User[]>;
 
+  abstract findMany(filters: {
+    search?: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    roleId?: number;
+    statusId?: number;
+    clientId?: number;
+    systemRoleId?: number;
+    clientRoleId?: number;
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: 'ASC' | 'DESC';
+  }): Promise<{ data: User[]; total: number }>;
+
   abstract findById(id: User['id']): Promise<NullableType<User>>;
   abstract findByIds(ids: User['id'][]): Promise<User[]>;
   abstract findByEmail(email: User['email']): Promise<NullableType<User>>;

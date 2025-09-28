@@ -28,16 +28,11 @@ import { Roles } from '../roles/roles.decorator';
 import { RoleEnum } from '../roles/roles.enum';
 import { AuthGuard } from '@nestjs/passport';
 
-import {
-  InfinityPaginationResponse,
-  InfinityPaginationResponseDto,
-} from '../utils/dto/infinity-pagination-response.dto';
 import { NullableType } from '../utils/types/nullable.type';
 import { QueryUserDto } from './dto/query-user.dto';
 import { User } from './domain/user';
 import { UsersService } from './users.service';
 import { RolesGuard } from '../roles/roles.guard';
-import { infinityPagination } from '../utils/infinity-pagination';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
@@ -64,7 +59,17 @@ export class UsersController {
   }
 
   @ApiOkResponse({
-    type: InfinityPaginationResponse(User),
+    description: 'Users retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        data: {
+          type: 'array',
+          items: { $ref: '#/components/schemas/User' },
+        },
+        total: { type: 'number' },
+      },
+    },
   })
   @SerializeOptions({
     groups: ['admin'],
@@ -73,35 +78,8 @@ export class UsersController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleEnum.admin)
   @HttpCode(HttpStatus.OK)
-  async findAll(
-    @Query() query: QueryUserDto,
-  ): Promise<InfinityPaginationResponseDto<User>> {
-    const page = query?.page ?? 1;
-    let limit = query?.limit ?? 10;
-    if (limit > 50) {
-      limit = 50;
-    }
-
-    return infinityPagination(
-      await this.usersService.findManyWithPagination({
-        search: query?.search,
-        firstName: query?.firstName,
-        lastName: query?.lastName,
-        email: query?.email,
-        roleId: query?.roleId,
-        statusId: query?.statusId,
-        clientId: query?.clientId,
-        systemRoleId: query?.systemRoleId,
-        clientRoleId: query?.clientRoleId,
-        sortBy: query?.sortBy,
-        sortOrder: query?.sortOrder,
-        paginationOptions: {
-          page,
-          limit,
-        },
-      }),
-      { page, limit },
-    );
+  async findAll(@Query() query: QueryUserDto) {
+    return await this.usersService.findMany(query);
   }
 
   @ApiOkResponse({

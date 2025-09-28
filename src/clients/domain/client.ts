@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Allow } from 'class-validator';
 import { FileType } from '../../files/domain/file';
+import { Plan } from '../../plans/domain/plan';
 
 export class Client {
   @Allow()
@@ -43,6 +44,11 @@ export class Client {
     example: 1,
   })
   planId: number;
+
+  @ApiProperty({
+    type: () => Plan,
+  })
+  plan?: Plan;
 
   @ApiProperty({
     type: () => FileType,

@@ -226,6 +226,44 @@ export class UsersService {
     });
   }
 
+  async findMany(filters: {
+    search?: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    roleId?: number;
+    statusId?: number;
+    clientId?: number;
+    systemRoleId?: number;
+    clientRoleId?: number;
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: 'ASC' | 'DESC';
+  }): Promise<{ data: User[]; total: number }> {
+    const page = filters.page ?? 1;
+    let limit = filters.limit ?? 10;
+    if (limit > 50) {
+      limit = 50;
+    }
+
+    return await this.usersRepository.findMany({
+      search: filters.search,
+      firstName: filters.firstName,
+      lastName: filters.lastName,
+      email: filters.email,
+      roleId: filters.roleId,
+      statusId: filters.statusId,
+      clientId: filters.clientId,
+      systemRoleId: filters.systemRoleId,
+      clientRoleId: filters.clientRoleId,
+      sortBy: filters.sortBy,
+      sortOrder: filters.sortOrder,
+      page,
+      limit,
+    });
+  }
+
   findById(id: User['id']): Promise<NullableType<User>> {
     return this.usersRepository.findById(id);
   }

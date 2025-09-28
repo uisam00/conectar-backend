@@ -3,6 +3,7 @@ import {
   ConflictException,
   UnprocessableEntityException,
   HttpStatus,
+  BadRequestException,
 } from '@nestjs/common';
 import { ClientRepository } from './infrastructure/persistence/client.repository';
 import { Client } from './domain/client';
@@ -58,7 +59,29 @@ export class ClientsService {
       photo,
     };
 
-    return this.clientRepository.create(clientData);
+    try {
+      return await this.clientRepository.create(clientData);
+    } catch (error) {
+      // Mapear erros de banco para mensagens amigáveis
+      if (error.code === '22P02') {
+        throw new BadRequestException(
+          'Dados inválidos fornecidos. Verifique os campos e tente novamente.',
+        );
+      }
+
+      if (error.code === '23505') {
+        throw new ConflictException('CNPJ já cadastrado');
+      }
+
+      if (error.code === '23503') {
+        throw new BadRequestException(
+          'Referência inválida. Verifique se o plano e status existem.',
+        );
+      }
+
+      // Re-throw outros erros
+      throw error;
+    }
   }
 
   async findMany(
@@ -109,7 +132,29 @@ export class ClientsService {
         photo,
       };
 
-      return this.clientRepository.update(id, updateData);
+      try {
+        return await this.clientRepository.update(id, updateData);
+      } catch (error) {
+        // Mapear erros de banco para mensagens amigáveis
+        if (error.code === '22P02') {
+          throw new BadRequestException(
+            'Dados inválidos fornecidos. Verifique os campos e tente novamente.',
+          );
+        }
+
+        if (error.code === '23505') {
+          throw new ConflictException('CNPJ já cadastrado');
+        }
+
+        if (error.code === '23503') {
+          throw new BadRequestException(
+            'Referência inválida. Verifique se o plano e status existem.',
+          );
+        }
+
+        // Re-throw outros erros
+        throw error;
+      }
     }
 
     // Atualizar com foto
@@ -118,7 +163,29 @@ export class ClientsService {
       photo,
     };
 
-    return this.clientRepository.update(id, updateData);
+    try {
+      return await this.clientRepository.update(id, updateData);
+    } catch (error) {
+      // Mapear erros de banco para mensagens amigáveis
+      if (error.code === '22P02') {
+        throw new BadRequestException(
+          'Dados inválidos fornecidos. Verifique os campos e tente novamente.',
+        );
+      }
+
+      if (error.code === '23505') {
+        throw new ConflictException('CNPJ já cadastrado');
+      }
+
+      if (error.code === '23503') {
+        throw new BadRequestException(
+          'Referência inválida. Verifique se o plano e status existem.',
+        );
+      }
+
+      // Re-throw outros erros
+      throw error;
+    }
   }
 
   async delete(id: number): Promise<void> {

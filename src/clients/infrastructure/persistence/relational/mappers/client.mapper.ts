@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ClientEntity } from '../entities/client.entity';
 import { Client } from '../../../../domain/client';
+import { FileMapper } from '../../../../../files/infrastructure/persistence/relational/mappers/file.mapper';
 
 @Injectable()
 export class ClientMapper {
@@ -12,7 +13,10 @@ export class ClientMapper {
     domain.nomeComercial = raw.nomeComercial;
     domain.statusId = raw.statusId;
     domain.planId = raw.planId;
-    domain.photo = raw.photo;
+    domain.plan = raw.plan;
+    if (raw.photo) {
+      domain.photo = FileMapper.toDomain(raw.photo);
+    }
     domain.createdAt = raw.createdAt;
     domain.updatedAt = raw.updatedAt;
     domain.deletedAt = raw.deletedAt;
@@ -27,7 +31,7 @@ export class ClientMapper {
     entity.nomeComercial = domain.nomeComercial;
     entity.statusId = domain.statusId;
     entity.planId = domain.planId;
-    entity.photoId = domain.photo?.id as number;
+    entity.photoId = domain.photo?.id || null;
     return entity;
   }
 
