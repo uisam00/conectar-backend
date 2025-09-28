@@ -24,6 +24,11 @@ export class ClientMembershipGuard implements CanActivate {
       throw new ForbiddenException('User or client ID not found');
     }
 
+    // Se o usuário for administrador (roleId = 1), pular a validação de membership
+    if (user.role?.id === 1) {
+      return true;
+    }
+
     // Verificar se o usuário pertence ao cliente
     const userClient = await this.userClientRepository.findOne({
       where: {
