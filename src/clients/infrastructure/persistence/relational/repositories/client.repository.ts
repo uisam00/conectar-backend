@@ -1,16 +1,26 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike } from 'typeorm';
+import { Repository, ILike, FindOptionsWhere, In } from 'typeorm';
 import { ClientEntity } from '../entities/client.entity';
 import { ClientMapper } from '../mappers/client.mapper';
 import { ClientRepository } from '../../client.repository';
 import { Client } from '../../../../domain/client';
+import {
+  FilterUserDto,
+  SortUserDto,
+} from '../../../../../users/dto/query-user.dto';
+import { User } from '../../../../../users/domain/user';
+import { IPaginationOptions } from '../../../../../utils/types/pagination-options';
+import { UserEntity } from '../../../../../users/infrastructure/persistence/relational/entities/user.entity';
+import { UserMapper } from '../../../../../users/infrastructure/persistence/relational/mappers/user.mapper';
 
 @Injectable()
 export class ClientRelationalRepository implements ClientRepository {
   constructor(
     @InjectRepository(ClientEntity)
     private readonly clientRepository: Repository<ClientEntity>,
+    @InjectRepository(UserEntity)
+    private readonly userRepository: Repository<UserEntity>,
     private readonly mapper: ClientMapper,
   ) {}
 
@@ -189,5 +199,91 @@ export class ClientRelationalRepository implements ClientRepository {
 
   async delete(id: Client['id']): Promise<void> {
     await this.clientRepository.softDelete({ id: id as number });
+  }
+
+  async findUsersByClient(
+    clientId: number,
+    {
+      filterOptions,
+      sortOptions,
+      paginationOptions,
+    }: {
+      filterOptions?: FilterUserDto | null;
+      sortOptions?: SortUserDto[] | null;
+      paginationOptions: IPaginationOptions;
+    },
+  ): Promise<User[]> {
+    const where: FindOptionsWhere<UserEntity> = {};
+    const relations = ['role', 'status', 'photo'];
+
+    // Filtro por roles do sistema
+    if (filterOptions?.roles?.length) {
+      where.role = filterOptions.roles.map((role) => ({
+        id: Number(role.id),
+      }));
+    }
+
+    // Filtro por role do sistema específico
+    if (filterOptions?.systemRoleId) {
+      where.role = { id: filterOptions.systemRoleId };
+    }
+
+    // Filtro por role do cliente
+    if (filterOptions?.clientRoleId) {
+      // Buscar IDs dos usuários que atendem aos critérios de role do cliente
+      const userClientQuery = this.userRepository
+        .createQueryBuilder('user')
+        .select('user.id')
+        .leftJoin('user_clients', 'uc', 'uc.userId = user.id')
+        .where('uc.clientId = :clientId', { clientId })
+        .andWhere('uc.clientRoleId = :clientRoleId', {
+          clientRoleId: filterOptions.clientRoleId,
+        });
+
+      const userClientResults = await userClientQuery.getMany();
+      const userIds = userClientResults.map((user) => user.id);
+
+      // Se não encontrou usuários com os critérios de cliente, retornar array vazio
+      if (userIds.length === 0) {
+        return [];
+      }
+
+      where.id = In(userIds);
+    } else {
+      // Se não há filtro de role do cliente, buscar todos os usuários do cliente
+      const userClientQuery = this.userRepository
+        .createQueryBuilder('user')
+        .select('user.id')
+        .leftJoin('user_clients', 'uc', 'uc.userId = user.id')
+        .where('uc.clientId = :clientId', { clientId });
+
+      const userClientResults = await userClientQuery.getMany();
+      const userIds = userClientResults.map((user) => user.id);
+
+      // Se não encontrou usuários do cliente, retornar array vazio
+      if (userIds.length === 0) {
+        return [];
+      }
+
+      where.id = In(userIds);
+    }
+
+    // Construir ordenação
+    const order: any = {};
+    if (sortOptions?.length) {
+      sortOptions.forEach((sort) => {
+        order[sort.orderBy] = sort.order.toUpperCase();
+      });
+    }
+
+    const entities = await this.userRepository.find({
+      where,
+      relations,
+      skip: (paginationOptions.page - 1) * paginationOptions.limit,
+      take: paginationOptions.limit,
+      order: Object.keys(order).length > 0 ? order : undefined,
+    });
+
+    return entities.map((user) => UserMapper.toDomain(user));
   }
 }

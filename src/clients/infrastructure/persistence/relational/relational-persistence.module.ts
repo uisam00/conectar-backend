@@ -5,9 +5,12 @@ import { ClientMapper } from './mappers/client.mapper';
 import { ClientRelationalRepository } from './repositories/client.repository';
 import { ClientRepository } from '../client.repository';
 import { UserClientEntity } from '../../../../users/infrastructure/persistence/relational/entities/user-client.entity';
+import { UserEntity } from '../../../../users/infrastructure/persistence/relational/entities/user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ClientEntity, UserClientEntity])],
+  imports: [
+    TypeOrmModule.forFeature([ClientEntity, UserClientEntity, UserEntity]),
+  ],
   providers: [
     ClientMapper,
     {

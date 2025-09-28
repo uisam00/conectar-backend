@@ -28,6 +28,10 @@ import { RolesGuard } from '../roles/roles.guard';
 import { RoleEnum } from '../roles/roles.enum';
 import { AuthGuard } from '@nestjs/passport';
 import { ClientMembershipGuard } from './guards/client-membership.guard';
+import { infinityPagination } from '../utils/infinity-pagination';
+import { InfinityPaginationResponseDto } from '../utils/dto/infinity-pagination-response.dto';
+import { QueryUserDto } from '../users/dto/query-user.dto';
+import { User } from '../users/domain/user';
 
 @ApiTags('Clients')
 @ApiBearerAuth()
@@ -200,5 +204,58 @@ export class ClientsController {
   })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.clientsService.delete(id);
+  }
+
+  @Get(':id/users')
+  @UseGuards(AuthGuard('jwt'), RolesGuard, ClientMembershipGuard)
+  @Roles(RoleEnum.admin)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Get users by client',
+    description: 'Retrieve all users associated with a specific client',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Users retrieved successfully',
+    type: InfinityPaginationResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - Invalid client ID format',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
+  @ApiResponse({
+    status: 403,
+    description:
+      'Forbidden - Admin access required or user does not belong to client',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Client not found',
+  })
+  async findUsersByClient(
+    @Param('id', ParseIntPipe) clientId: number,
+    @Query() query: QueryUserDto,
+  ): Promise<InfinityPaginationResponseDto<User>> {
+    const page = query?.page ?? 1;
+    let limit = query?.limit ?? 10;
+    if (limit > 50) {
+      limit = 50;
+    }
+
+    return infinityPagination(
+      await this.clientsService.findUsersByClient(clientId, {
+        filterOptions: query?.filters,
+        sortOptions: query?.sort,
+        paginationOptions: {
+          page,
+          limit,
+        },
+      }),
+      { page, limit },
+    );
   }
 }

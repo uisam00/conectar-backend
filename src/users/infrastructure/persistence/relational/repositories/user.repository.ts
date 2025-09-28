@@ -35,23 +35,71 @@ export class UsersRelationalRepository implements UserRepository {
     paginationOptions: IPaginationOptions;
   }): Promise<User[]> {
     const where: FindOptionsWhere<UserEntity> = {};
+    const relations = ['role', 'status', 'photo'];
+
+    // Filtro por roles do sistema
     if (filterOptions?.roles?.length) {
       where.role = filterOptions.roles.map((role) => ({
         id: Number(role.id),
       }));
     }
 
+    // Filtro por role do sistema específico
+    if (filterOptions?.systemRoleId) {
+      where.role = { id: filterOptions.systemRoleId };
+    }
+
+    // Para filtros de cliente e role do cliente, precisamos usar uma abordagem diferente
+    // pois não são campos diretos da entidade User
+    let userIds: number[] | undefined;
+
+    if (filterOptions?.clientId || filterOptions?.clientRoleId) {
+      // Buscar IDs dos usuários que atendem aos critérios de cliente/role do cliente
+      const userClientQuery = this.usersRepository
+        .createQueryBuilder('user')
+        .select('user.id')
+        .leftJoin('user_clients', 'uc', 'uc.userId = user.id');
+
+      if (filterOptions?.clientId) {
+        userClientQuery.andWhere('uc.clientId = :clientId', {
+          clientId: filterOptions.clientId,
+        });
+      }
+
+      if (filterOptions?.clientRoleId) {
+        userClientQuery.andWhere('uc.clientRoleId = :clientRoleId', {
+          clientRoleId: filterOptions.clientRoleId,
+        });
+      }
+
+      const userClientResults = await userClientQuery.getMany();
+      userIds = userClientResults.map((user) => user.id);
+
+      // Se não encontrou usuários com os critérios de cliente, retornar array vazio
+      if (userIds.length === 0) {
+        return [];
+      }
+    }
+
+    // Aplicar filtro de IDs se necessário
+    if (userIds) {
+      where.id = In(userIds);
+    }
+
+    // Construir ordenação
+    const order: any = {};
+    if (sortOptions?.length) {
+      sortOptions.forEach((sort) => {
+        order[sort.orderBy] = sort.order.toUpperCase();
+      });
+    }
+
     const entities = await this.usersRepository.find({
+      where,
+      relations,
       skip: (paginationOptions.page - 1) * paginationOptions.limit,
       take: paginationOptions.limit,
-      where: where,
-      order: sortOptions?.reduce(
-        (accumulator, sort) => ({
-          ...accumulator,
-          [sort.orderBy]: sort.order,
-        }),
-        {},
-      ),
+      order: Object.keys(order).length > 0 ? order : undefined,
     });
 
     return entities.map((user) => UserMapper.toDomain(user));

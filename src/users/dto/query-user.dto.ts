@@ -15,6 +15,27 @@ export class FilterUserDto {
   @ValidateNested({ each: true })
   @Type(() => RoleDto)
   roles?: RoleDto[] | null;
+
+  @ApiPropertyOptional({ type: Number, description: 'Filter by client ID' })
+  @IsOptional()
+  @IsNumber()
+  clientId?: number;
+
+  @ApiPropertyOptional({
+    type: Number,
+    description: 'Filter by system role ID',
+  })
+  @IsOptional()
+  @IsNumber()
+  systemRoleId?: number;
+
+  @ApiPropertyOptional({
+    type: Number,
+    description: 'Filter by client role ID',
+  })
+  @IsOptional()
+  @IsNumber()
+  clientRoleId?: number;
 }
 
 export class SortUserDto {

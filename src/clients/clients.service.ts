@@ -4,6 +4,9 @@ import { Client } from './domain/client';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { QueryClientDto } from './dto/query-client.dto';
+import { FilterUserDto, SortUserDto } from '../users/dto/query-user.dto';
+import { User } from '../users/domain/user';
+import { IPaginationOptions } from '../utils/types/pagination-options';
 
 @Injectable()
 export class ClientsService {
@@ -65,6 +68,25 @@ export class ClientsService {
 
   async delete(id: number): Promise<void> {
     return this.clientRepository.delete(id);
+  }
+
+  async findUsersByClient(
+    clientId: number,
+    {
+      filterOptions,
+      sortOptions,
+      paginationOptions,
+    }: {
+      filterOptions?: FilterUserDto | null;
+      sortOptions?: SortUserDto[] | null;
+      paginationOptions: IPaginationOptions;
+    },
+  ): Promise<User[]> {
+    return this.clientRepository.findUsersByClient(clientId, {
+      filterOptions,
+      sortOptions,
+      paginationOptions,
+    });
   }
 
   private normalizeCnpj(cnpj: string): string {
