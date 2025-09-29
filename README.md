@@ -1,7 +1,6 @@
 # Conéctar API
 
-
-## Descrição 
+## Descrição
 
 Api de teste prático.
 
@@ -9,11 +8,16 @@ Api de teste prático.
 
 Demo: https://conectar-backend-t4fq.onrender.com/docs
 
-Frontend: --inserir link--
+API (Swagger): https://conectar-backend-t4fq.onrender.com/docs
+
+Repo Frontend: https://github.com/uisam00/conectar-frontend
 
 ## Sumário
 
-- [Funcionalidades](#funcionalidades)
+- [Conéctar API](#conéctar-api)
+  - [Descrição](#descrição)
+  - [Sumário](#sumário)
+  - [Funcionalidades](#funcionalidades)
 
 ## Funcionalidades
 

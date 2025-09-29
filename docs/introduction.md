@@ -2,9 +2,9 @@
 
 ## Demo online
 
-Demo: --inserir link--
+Demo: https://conectar-backend-t4fq.onrender.com/docs
 
-Frontend (React): --inserir link--
+Frontend: https://github.com/uisam00/conectar-backend
 
 ## Funcionalidades
 
