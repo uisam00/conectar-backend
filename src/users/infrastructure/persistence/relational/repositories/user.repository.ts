@@ -321,12 +321,12 @@ export class UsersRelationalRepository implements UserRepository {
 
     // Status filter
     if (filters.statusId) {
-      whereConditions.statusId = filters.statusId;
+      whereConditions.status = { id: filters.statusId };
     }
 
     // Role filter
     if (filters.roleId) {
-      whereConditions.roleId = filters.roleId;
+      whereConditions.role = { id: filters.roleId };
     }
 
     // Search conditions
