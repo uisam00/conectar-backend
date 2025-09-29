@@ -33,6 +33,7 @@ import { QueryUserDto } from './dto/query-user.dto';
 import { User } from './domain/user';
 import { UsersService } from './users.service';
 import { RolesGuard } from '../roles/roles.guard';
+import { StatusEnum } from 'src/statuses/statuses.enum';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
@@ -55,7 +56,12 @@ export class UsersController {
   @Roles(RoleEnum.admin)
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createProfileDto: CreateUserDto): Promise<User> {
-    return this.usersService.create(createProfileDto);
+    const isInactive = createProfileDto.status?.id === StatusEnum.inactive;
+    return this.usersService.create(createProfileDto, {
+      sendPasswordEmail: Boolean(isInactive),
+      sendConfirmEmail: Boolean(isInactive),
+      sendWelcomeEmail: !Boolean(isInactive),
+    });
   }
 
   @ApiOkResponse({

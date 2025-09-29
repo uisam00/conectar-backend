@@ -142,15 +142,18 @@ export class AuthService {
         id: StatusEnum.active,
       };
 
-      user = await this.usersService.create({
-        email: socialEmail ?? null,
-        firstName: socialData.firstName ?? null,
-        lastName: socialData.lastName ?? null,
-        socialId: socialData.id,
-        provider: authProvider,
-        role,
-        status,
-      });
+      user = await this.usersService.create(
+        {
+          email: socialEmail ?? null,
+          firstName: socialData.firstName ?? null,
+          lastName: socialData.lastName ?? null,
+          socialId: socialData.id,
+          provider: authProvider,
+          role,
+          status,
+        },
+        { sendWelcomeEmail: true },
+      );
 
       user = await this.usersService.findById(user.id);
     }
@@ -194,37 +197,20 @@ export class AuthService {
   }
 
   async register(dto: AuthRegisterLoginDto): Promise<void> {
-    const user = await this.usersService.create({
-      ...dto,
-      email: dto.email,
-      role: {
-        id: RoleEnum.user,
-      },
-      status: {
-        id: StatusEnum.inactive,
-      },
-    });
-
-    const hash = await this.jwtService.signAsync(
+    await this.usersService.create(
       {
-        confirmEmailUserId: user.id,
+        ...dto,
+        email: dto.email,
+        role: {
+          id: RoleEnum.user,
+        },
+        status: {
+          id: StatusEnum.inactive,
+        },
       },
-      {
-        secret: this.configService.getOrThrow('auth.confirmEmailSecret', {
-          infer: true,
-        }),
-        expiresIn: this.configService.getOrThrow('auth.confirmEmailExpires', {
-          infer: true,
-        }),
-      },
+      { sendConfirmEmail: true },
     );
-
-    await this.mailService.userSignUp({
-      to: dto.email,
-      data: {
-        hash,
-      },
-    });
+    // E-mail de confirmação já enviado por UsersService.create quando sendConfirmEmail = true
   }
 
   async confirmEmail(hash: string): Promise<void> {

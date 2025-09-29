@@ -36,7 +36,14 @@ export class UsersService {
     private readonly configService: ConfigService<AllConfigType>,
   ) {}
 
-  async create(createUserDto: CreateUserDto): Promise<User> {
+  async create(
+    createUserDto: CreateUserDto,
+    options?: {
+      sendPasswordEmail?: boolean;
+      sendConfirmEmail?: boolean;
+      sendWelcomeEmail?: boolean;
+    },
+  ): Promise<User> {
     // Do not remove comment below.
     // <creating-property />
 
@@ -140,14 +147,10 @@ export class UsersService {
       clientAssociations, // Incluir associações diretamente
     });
 
-    // Enviar email apropriado baseado no status do usuário
     if (email && createUserDto.firstName) {
-      if (status?.id === StatusEnum.inactive) {
-        // Se status for inativo, enviar email com senha temporária + confirmação
+      if (options?.sendConfirmEmail) {
         const hash = await this.jwtService.signAsync(
-          {
-            confirmEmailUserId: user.id,
-          },
+          { confirmEmailUserId: user.id },
           {
             secret: this.configService.getOrThrow('auth.confirmEmailSecret', {
               infer: true,
@@ -161,21 +164,38 @@ export class UsersService {
           },
         );
 
-        await this.mailService.userCreatedWithConfirmation({
-          to: email,
-          data: {
-            firstName: createUserDto.firstName,
-            temporaryPassword: temporaryPassword,
-            hash,
-          },
-        });
-      } else {
-        // Se status for ativo, enviar email com senha temporária (sem confirmação)
+        if (options?.sendPasswordEmail) {
+          // confirmação + senha temporária
+          await this.mailService.userCreatedWithConfirmation({
+            to: email,
+            data: {
+              firstName: createUserDto.firstName,
+              temporaryPassword: temporaryPassword,
+              hash,
+            },
+          });
+        } else {
+          // somente confirmação
+          await this.mailService.userSignUp({
+            to: email,
+            data: { hash },
+          });
+        }
+      } else if (options?.sendPasswordEmail) {
+        // Apenas senha temporária (sem confirmação)
         await this.mailService.userCreated({
           to: email,
           data: {
             firstName: createUserDto.firstName,
             temporaryPassword: temporaryPassword,
+          },
+        });
+      } else if (options?.sendWelcomeEmail) {
+        // Mensagem de boas-vindas (sem senha temporária)
+        await this.mailService.userCreated({
+          to: email,
+          data: {
+            firstName: createUserDto.firstName,
           },
         });
       }

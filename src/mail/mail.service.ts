@@ -175,7 +175,7 @@ export class MailService {
   async userCreated(
     mailData: MailData<{
       firstName: string;
-      temporaryPassword: string;
+      temporaryPassword?: string;
     }>,
   ): Promise<void> {
     try {
@@ -209,6 +209,10 @@ export class MailService {
         }) + '/login',
       );
 
+      const templateFile = mailData.data.temporaryPassword
+        ? 'user-created.hbs'
+        : 'welcome.hbs';
+
       await this.mailerService.sendMail({
         to: mailData.to,
         subject: userCreatedTitle,
@@ -220,7 +224,7 @@ export class MailService {
           'src',
           'mail',
           'mail-templates',
-          'user-created.hbs',
+          templateFile,
         ),
         context: {
           title: userCreatedTitle,
