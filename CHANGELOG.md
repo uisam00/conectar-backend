@@ -1,5 +1,9 @@
 # Changelog
 
+## <small>1.4.1 (2025-09-29)</small>
+
+- fix(auth): remove variÃ¡vel nÃ£o utilizada no register ([e5e8a73](https://github.com/uisam00/conectar-backend/commit/e5e8a73))
+
 ## 1.4.0 (2025-09-29)
 
 - docs: adiciona documentação clients controller ([509afc4](https://github.com/uisam00/conectar-backend/commit/509afc4))
