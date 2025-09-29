@@ -6,7 +6,6 @@ import { ClientMapper } from '../mappers/client.mapper';
 import { ClientRepository } from '../../client.repository';
 import { Client } from '../../../../domain/client';
 import { User } from '../../../../../users/domain/user';
-import { IPaginationOptions } from '../../../../../utils/types/pagination-options';
 import { UserEntity } from '../../../../../users/infrastructure/persistence/relational/entities/user.entity';
 import { UserMapper } from '../../../../../users/infrastructure/persistence/relational/mappers/user.mapper';
 
@@ -211,7 +210,8 @@ export class ClientRelationalRepository implements ClientRepository {
       clientRoleId,
       sortBy,
       sortOrder,
-      paginationOptions,
+      page,
+      limit,
     }: {
       search?: string;
       firstName?: string;
@@ -223,15 +223,17 @@ export class ClientRelationalRepository implements ClientRepository {
       clientRoleId?: number;
       sortBy?: string;
       sortOrder?: 'ASC' | 'DESC';
-      paginationOptions: IPaginationOptions;
+      page?: number;
+      limit?: number;
     },
-  ): Promise<User[]> {
+  ): Promise<{ data: User[]; total: number }> {
     const queryBuilder = this.userRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.role', 'role')
       .leftJoinAndSelect('user.status', 'status')
       .leftJoinAndSelect('user.photo', 'photo')
       .leftJoin('user_clients', 'uc', 'uc.userId = user.id')
+      .leftJoinAndSelect('uc.clientRole', 'clientRole')
       .where('uc.clientId = :clientId', { clientId });
 
     // Filtro por busca geral (firstName, lastName, email)
@@ -279,11 +281,50 @@ export class ClientRelationalRepository implements ClientRepository {
     }
 
     // Paginação
-    queryBuilder
-      .skip((paginationOptions.page - 1) * paginationOptions.limit)
-      .take(paginationOptions.limit);
+    const pageNum = page || 1;
+    const limitNum = limit || 10;
+    queryBuilder.skip((pageNum - 1) * limitNum).take(limitNum);
 
-    const entities = await queryBuilder.getMany();
-    return entities.map((user) => UserMapper.toDomain(user));
+    const [entities, total] = await queryBuilder.getManyAndCount();
+
+    // Para cada usuário, buscar a role do cliente específica
+    const usersWithClientRoles = await Promise.all(
+      entities.map(async (user) => {
+        const userClient = await this.userRepository.manager
+          .createQueryBuilder()
+          .select([
+            'uc.clientRoleId',
+            'cr.id',
+            'cr.name',
+            'cr.description',
+            'cr.permissions',
+          ])
+          .from('user_clients', 'uc')
+          .leftJoin('client_roles', 'cr', 'cr.id = uc.clientRoleId')
+          .where('uc.userId = :userId AND uc.clientId = :clientId', {
+            userId: user.id,
+            clientId,
+          })
+          .getRawOne();
+
+        const userDomain = UserMapper.toDomain(user);
+
+        if (userClient && userClient.cr_id) {
+          userDomain.clientRole = {
+            id: userClient.cr_id,
+            name: userClient.cr_name,
+            description: userClient.cr_description,
+            permissions: userClient.cr_permissions,
+          };
+        }
+
+        return userDomain;
+      }),
+    );
+
+    return {
+      data: usersWithClientRoles,
+      total,
+    };
   }
 }

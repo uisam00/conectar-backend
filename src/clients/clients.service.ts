@@ -11,7 +11,6 @@ import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { QueryClientDto } from './dto/query-client.dto';
 import { User } from '../users/domain/user';
-import { IPaginationOptions } from '../utils/types/pagination-options';
 import { FilesService } from '../files/files.service';
 import { FileType } from '../files/domain/file';
 
@@ -205,7 +204,8 @@ export class ClientsService {
       clientRoleId,
       sortBy,
       sortOrder,
-      paginationOptions,
+      page,
+      limit,
     }: {
       search?: string;
       firstName?: string;
@@ -217,9 +217,10 @@ export class ClientsService {
       clientRoleId?: number;
       sortBy?: string;
       sortOrder?: 'ASC' | 'DESC';
-      paginationOptions: IPaginationOptions;
+      page?: number;
+      limit?: number;
     },
-  ): Promise<User[]> {
+  ): Promise<{ data: User[]; total: number }> {
     return this.clientRepository.findUsersByClient(clientId, {
       search,
       firstName,
@@ -231,7 +232,8 @@ export class ClientsService {
       clientRoleId,
       sortBy,
       sortOrder,
-      paginationOptions,
+      page,
+      limit,
     });
   }
 

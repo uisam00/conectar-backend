@@ -1,6 +1,5 @@
 import { Client } from '../../domain/client';
 import { User } from '../../../users/domain/user';
-import { IPaginationOptions } from '../../../utils/types/pagination-options';
 
 export abstract class ClientRepository {
   abstract create(
@@ -29,7 +28,8 @@ export abstract class ClientRepository {
       clientRoleId,
       sortBy,
       sortOrder,
-      paginationOptions,
+      page,
+      limit,
     }: {
       search?: string;
       firstName?: string;
@@ -41,7 +41,8 @@ export abstract class ClientRepository {
       clientRoleId?: number;
       sortBy?: string;
       sortOrder?: 'ASC' | 'DESC';
-      paginationOptions: IPaginationOptions;
+      page?: number;
+      limit?: number;
     },
-  ): Promise<User[]>;
+  ): Promise<{ data: User[]; total: number }>;
 }

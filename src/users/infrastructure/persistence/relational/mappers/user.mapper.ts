@@ -23,6 +23,18 @@ export class UserMapper {
     domainEntity.createdAt = raw.createdAt;
     domainEntity.updatedAt = raw.updatedAt;
     domainEntity.deletedAt = raw.deletedAt;
+
+    // Incluir informações da role do cliente se disponível
+    // Nota: Esta informação será preenchida pelo repositório quando necessário
+    if ((raw as any).clientRole) {
+      domainEntity.clientRole = {
+        id: (raw as any).clientRole.id,
+        name: (raw as any).clientRole.name,
+        description: (raw as any).clientRole.description,
+        permissions: (raw as any).clientRole.permissions,
+      };
+    }
+
     return domainEntity;
   }
 

@@ -75,6 +75,19 @@ export class User {
     clientRoleId: number;
   }>;
 
+  @ApiProperty({
+    type: Object,
+    description: 'Role do cliente para o usuário atual',
+    required: false,
+  })
+  @Expose({ groups: ['admin'] })
+  clientRole?: {
+    id: number;
+    name: string;
+    description?: string;
+    permissions?: Record<string, any>;
+  };
+
   @ApiProperty()
   createdAt: Date;
 

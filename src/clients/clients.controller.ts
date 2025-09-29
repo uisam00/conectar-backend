@@ -11,6 +11,7 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  SerializeOptions,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -28,8 +29,6 @@ import { RolesGuard } from '../roles/roles.guard';
 import { RoleEnum } from '../roles/roles.enum';
 import { AuthGuard } from '@nestjs/passport';
 import { ClientMembershipGuard } from './guards/client-membership.guard';
-import { infinityPagination } from '../utils/infinity-pagination';
-import { InfinityPaginationResponseDto } from '../utils/dto/infinity-pagination-response.dto';
 import { QueryUserDto } from '../users/dto/query-user.dto';
 import { User } from '../users/domain/user';
 
@@ -210,6 +209,9 @@ export class ClientsController {
   @UseGuards(AuthGuard('jwt'), RolesGuard, ClientMembershipGuard)
   @Roles(RoleEnum.admin)
   @HttpCode(HttpStatus.OK)
+  @SerializeOptions({
+    groups: ['admin'],
+  })
   @ApiOperation({
     summary: 'Get users by client',
     description: 'Retrieve all users associated with a specific client',
@@ -217,7 +219,16 @@ export class ClientsController {
   @ApiResponse({
     status: 200,
     description: 'Users retrieved successfully',
-    type: InfinityPaginationResponseDto,
+    schema: {
+      type: 'object',
+      properties: {
+        data: {
+          type: 'array',
+          items: { $ref: '#/components/schemas/User' },
+        },
+        total: { type: 'number' },
+      },
+    },
   })
   @ApiResponse({
     status: 400,
@@ -239,31 +250,26 @@ export class ClientsController {
   async findUsersByClient(
     @Param('id', ParseIntPipe) clientId: number,
     @Query() query: QueryUserDto,
-  ): Promise<InfinityPaginationResponseDto<User>> {
+  ): Promise<{ data: User[]; total: number }> {
     const page = query?.page ?? 1;
     let limit = query?.limit ?? 10;
     if (limit > 50) {
       limit = 50;
     }
 
-    return infinityPagination(
-      await this.clientsService.findUsersByClient(clientId, {
-        search: query?.search,
-        firstName: query?.firstName,
-        lastName: query?.lastName,
-        email: query?.email,
-        roleId: query?.roleId,
-        statusId: query?.statusId,
-        systemRoleId: query?.systemRoleId,
-        clientRoleId: query?.clientRoleId,
-        sortBy: query?.sortBy,
-        sortOrder: query?.sortOrder,
-        paginationOptions: {
-          page,
-          limit,
-        },
-      }),
-      { page, limit },
-    );
+    return await this.clientsService.findUsersByClient(clientId, {
+      search: query?.search,
+      firstName: query?.firstName,
+      lastName: query?.lastName,
+      email: query?.email,
+      roleId: query?.roleId,
+      statusId: query?.statusId,
+      systemRoleId: query?.systemRoleId,
+      clientRoleId: query?.clientRoleId,
+      sortBy: query?.sortBy,
+      sortOrder: query?.sortOrder,
+      page,
+      limit,
+    });
   }
 }
