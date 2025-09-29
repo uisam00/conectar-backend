@@ -3,6 +3,10 @@ import { NullableType } from '../../../utils/types/nullable.type';
 import { IPaginationOptions } from '../../../utils/types/pagination-options';
 import { User } from '../../domain/user';
 
+export type UpdateUserPayload = DeepPartial<User> & {
+  clientAssociations?: { clientId: number; clientRoleId?: number }[];
+};
+
 export abstract class UserRepository {
   abstract create(
     data: Omit<User, 'id' | 'createdAt' | 'deletedAt' | 'updatedAt'> & {
@@ -67,7 +71,7 @@ export abstract class UserRepository {
 
   abstract update(
     id: User['id'],
-    payload: DeepPartial<User>,
+    payload: UpdateUserPayload,
   ): Promise<User | null>;
 
   abstract remove(id: User['id']): Promise<void>;

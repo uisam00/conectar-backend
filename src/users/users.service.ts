@@ -23,6 +23,7 @@ import { randomStringGenerator } from '@nestjs/common/utils/random-string-genera
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AllConfigType } from '../config/config.type';
+import { UpdateUserPayload } from './infrastructure/persistence/user.repository';
 
 @Injectable()
 export class UsersService {
@@ -387,7 +388,15 @@ export class UsersService {
       };
     }
 
-    return this.usersRepository.update(id, {
+    // Mapear clientRoles diretamente para clientAssociations (sem validação prévia)
+    const clientAssociations = Array.isArray((updateUserDto as any).clientRoles)
+      ? (updateUserDto as any).clientRoles.map((r) => ({
+          clientId: r.clientId,
+          clientRoleId: r.clientRoleId,
+        }))
+      : undefined;
+
+    const updatePayload: UpdateUserPayload = {
       // Do not remove comment below.
       // <updating-property-payload />
       firstName: updateUserDto.firstName,
@@ -399,7 +408,10 @@ export class UsersService {
       status,
       provider: updateUserDto.provider,
       socialId: updateUserDto.socialId,
-    });
+      clientAssociations,
+    };
+
+    return this.usersRepository.update(id, updatePayload);
   }
 
   async remove(id: User['id']): Promise<void> {
@@ -415,13 +427,13 @@ export class UsersService {
   }
 
   private async prepareClientAssociations(
-    createUserDto: CreateUserDto,
+    userDto: CreateUserDto | UpdateUserDto,
   ): Promise<{ clientId: number; clientRoleId?: number }[]> {
     const associations: { clientId: number; clientRoleId?: number }[] = [];
 
     // Processar clientRoles (com roles específicas)
-    if (createUserDto.clientRoles && createUserDto.clientRoles.length > 0) {
-      for (const { clientId, clientRoleId } of createUserDto.clientRoles) {
+    if (userDto.clientRoles && userDto.clientRoles.length > 0) {
+      for (const { clientId, clientRoleId } of userDto.clientRoles) {
         const client = await this.clientRepository.findById(clientId);
         if (!client) {
           throw new UnprocessableEntityException({

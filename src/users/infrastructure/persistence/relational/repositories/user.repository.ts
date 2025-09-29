@@ -7,6 +7,7 @@ import { NullableType } from '../../../../../utils/types/nullable.type';
 import { User } from '../../../../domain/user';
 import { UserRepository } from '../../user.repository';
 import { UserMapper } from '../mappers/user.mapper';
+import { UserClientEntity } from '../entities/user-client.entity';
 import { IPaginationOptions } from '../../../../../utils/types/pagination-options';
 
 @Injectable()
@@ -241,9 +242,32 @@ export class UsersRelationalRepository implements UserRepository {
   async findById(id: User['id']): Promise<NullableType<User>> {
     const entity = await this.usersRepository.findOne({
       where: { id: Number(id) },
+      relations: [
+        'role',
+        'status',
+        'photo',
+        'userClients',
+        'userClients.client',
+        'userClients.clientRole',
+      ],
     });
 
-    return entity ? UserMapper.toDomain(entity) : null;
+    if (!entity) return null;
+
+    const domainUser = UserMapper.toDomain(entity) as any;
+    const list = (entity as any).userClients || [];
+    domainUser.clients = list
+      .map((uc: any) => ({
+        id: uc.client?.id ?? null,
+        razaoSocial: uc.client?.razaoSocial,
+        nomeComercial: uc.client?.nomeComercial,
+        cnpj: uc.client?.cnpj,
+        clientRoleId: uc.clientRoleId,
+        clientRole: uc.clientRole,
+      }))
+      .filter((c: any) => c.id !== null);
+
+    return domainUser as User;
   }
 
   async findByIds(ids: User['id'][]): Promise<User[]> {
@@ -280,7 +304,12 @@ export class UsersRelationalRepository implements UserRepository {
     return entity ? UserMapper.toDomain(entity) : null;
   }
 
-  async update(id: User['id'], payload: Partial<User>): Promise<User> {
+  async update(
+    id: User['id'],
+    payload: Partial<User> & {
+      clientAssociations?: { clientId: number; clientRoleId?: number }[];
+    },
+  ): Promise<User> {
     const entity = await this.usersRepository.findOne({
       where: { id: Number(id) },
     });
@@ -297,6 +326,31 @@ export class UsersRelationalRepository implements UserRepository {
         }),
       ),
     );
+
+    // Atualizar associações com clientes se fornecidas
+    if (payload.clientAssociations !== undefined) {
+      // Remover associações existentes
+      await this.usersRepository.manager
+        .getRepository(UserClientEntity)
+        .delete({ userId: Number(id) });
+
+      // Criar novas associações se fornecidas
+      if (payload.clientAssociations && payload.clientAssociations.length > 0) {
+        const userClientData = payload.clientAssociations.map(
+          ({ clientId, clientRoleId }) => {
+            const entity = new UserClientEntity();
+            entity.userId = Number(id);
+            entity.clientId = clientId;
+            entity.clientRoleId = clientRoleId;
+            return entity;
+          },
+        );
+
+        await this.usersRepository.manager
+          .getRepository(UserClientEntity)
+          .save(userClientData);
+      }
+    }
 
     return UserMapper.toDomain(updatedEntity);
   }
@@ -369,16 +423,41 @@ export class UsersRelationalRepository implements UserRepository {
       order[filters.sortBy] = filters.sortOrder;
     }
 
-    const [data, total] = await this.usersRepository.findAndCount({
+    const [entities, total] = await this.usersRepository.findAndCount({
       where,
-      relations,
+      relations: [
+        ...relations,
+        'userClients',
+        'userClients.client',
+        'userClients.clientRole',
+      ],
       skip: ((filters.page || 1) - 1) * (filters.limit || 10),
       take: filters.limit || 10,
       order: Object.keys(order).length > 0 ? order : undefined,
     });
 
+    const domainUsers = entities.map((item) =>
+      UserMapper.toDomain(item),
+    ) as any[];
+
+    for (let i = 0; i < domainUsers.length; i++) {
+      const du = domainUsers[i];
+      const entity = entities[i] as any;
+      const list = (entity.userClients || []) as any[];
+      du.clients = list
+        .map((uc) => ({
+          id: uc.client?.id ?? null,
+          razaoSocial: uc.client?.razaoSocial,
+          nomeComercial: uc.client?.nomeComercial,
+          cnpj: uc.client?.cnpj,
+          clientRoleId: uc.clientRoleId,
+          clientRole: uc.clientRole,
+        }))
+        .filter((c) => c.id !== null);
+    }
+
     return {
-      data: data.map((item) => UserMapper.toDomain(item)),
+      data: domainUsers as User[],
       total,
     };
   }
