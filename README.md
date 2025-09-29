@@ -6,11 +6,11 @@ Api de teste prático.
 
 [Documentação completa aqui](/docs/readme.md)
 
-Demo: https://conectar-backend-t4fq.onrender.com/docs
+Demo Frontend: https://conectar-frontend-07mc.onrender.com
 
 API (Swagger): https://conectar-backend-t4fq.onrender.com/docs
 
-Repo Frontend: https://github.com/uisam00/conectar-frontend
+Repo Backend: https://github.com/uisam00/conectar-backend
 
 ## Usuário de teste
 
