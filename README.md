@@ -12,10 +12,22 @@ API (Swagger): https://conectar-backend-t4fq.onrender.com/docs
 
 Repo Frontend: https://github.com/uisam00/conectar-frontend
 
+## Usuário de teste
+
+Use as credenciais abaixo para acessar o sistema em desenvolvimento:
+
+```json
+{
+  "email": "fulano@example.com",
+  "password": "Senha!123"
+}
+```
+
 ## Sumário
 
 - [Conéctar API](#conéctar-api)
   - [Descrição](#descrição)
+  - [Usuário de teste](#usuário-de-teste)
   - [Sumário](#sumário)
   - [Funcionalidades](#funcionalidades)
 
