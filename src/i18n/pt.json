@@ -1,0 +1,21 @@
+{
+  "common": {
+    "success": "Sucesso",
+    "error": "Erro",
+    "loading": "Carregando...",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "create": "Criar"
+  },
+  "notifications": {
+    "title": "Notificações",
+    "unread": "Não lidas",
+    "markAsRead": "Marcar como lida",
+    "markAllAsRead": "Marcar todas como lidas",
+    "delete": "Excluir notificação",
+    "clientInactive": "Cliente inativo",
+    "clientInactiveMessage": "O cliente {clientName} não possui usuários ativos há {days} dias"
+  }
+}

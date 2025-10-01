@@ -29,7 +29,9 @@ export class NotificationMapper {
     persistenceEntity.metadata = domainEntity.metadata;
     persistenceEntity.createdAt = domainEntity.createdAt;
     persistenceEntity.updatedAt = domainEntity.updatedAt;
-    persistenceEntity.deletedAt = domainEntity.deletedAt;
+    if (domainEntity.deletedAt) {
+      persistenceEntity.deletedAt = domainEntity.deletedAt;
+    }
 
     return persistenceEntity;
   }

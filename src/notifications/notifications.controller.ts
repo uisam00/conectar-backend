@@ -49,7 +49,27 @@ export class NotificationsController {
 
   @Get()
   @ApiOperation({ summary: 'Listar notificações do usuário' })
-  @ApiResponse({ status: 200, description: 'Lista de notificações' })
+  @ApiResponse({
+    status: 200,
+    description:
+      'Lista de notificações ordenadas por status (não lidas primeiro) com contagem de não lidas',
+    schema: {
+      type: 'object',
+      properties: {
+        data: {
+          type: 'array',
+          items: { type: 'object' },
+          description:
+            'Notificações ordenadas: não lidas primeiro, depois por data (mais recente primeiro)',
+        },
+        total: { type: 'number', description: 'Total de notificações' },
+        unreadCount: {
+          type: 'number',
+          description: 'Quantidade de notificações não lidas',
+        },
+      },
+    },
+  })
   async findMany(@Query() queryDto: QueryNotificationDto, @Request() req) {
     // Para usuários normais, filtrar apenas suas notificações
     if (req.user.role.name.toLowerCase() !== 'admin') {

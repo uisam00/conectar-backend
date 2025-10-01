@@ -31,7 +31,7 @@ export class NotificationRelationalRepository
     type?: string;
     page?: number;
     limit?: number;
-  }): Promise<{ data: Notification[]; total: number }> {
+  }): Promise<{ data: Notification[]; total: number; unreadCount: number }> {
     const queryBuilder =
       this.notificationRepository.createQueryBuilder('notification');
 
@@ -56,9 +56,32 @@ export class NotificationRelationalRepository
     queryBuilder
       .leftJoinAndSelect('notification.user', 'user')
       .leftJoinAndSelect('notification.client', 'client')
-      .orderBy('notification.createdAt', 'DESC');
+      .orderBy('notification.isRead', 'ASC') // Não lidas primeiro (false < true)
+      .addOrderBy('notification.createdAt', 'DESC'); // Depois por data (mais recente primeiro)
 
     const total = await queryBuilder.getCount();
+
+    // Contar notificações não lidas
+    const unreadQueryBuilder =
+      this.notificationRepository.createQueryBuilder('notification');
+
+    if (filters.userId) {
+      unreadQueryBuilder.andWhere('notification.user.id = :userId', {
+        userId: filters.userId,
+      });
+    }
+
+    if (filters.type) {
+      unreadQueryBuilder.andWhere('notification.type = :type', {
+        type: filters.type,
+      });
+    }
+
+    unreadQueryBuilder.andWhere('notification.isRead = :isRead', {
+      isRead: false,
+    });
+
+    const unreadCount = await unreadQueryBuilder.getCount();
 
     if (filters.page && filters.limit) {
       const offset = (filters.page - 1) * filters.limit;
@@ -68,7 +91,7 @@ export class NotificationRelationalRepository
     const entities = await queryBuilder.getMany();
     const data = entities.map((entity) => NotificationMapper.toDomain(entity));
 
-    return { data, total };
+    return { data, total, unreadCount };
   }
 
   async findById(id: Notification['id']): Promise<Notification | null> {

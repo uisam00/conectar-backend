@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { UsersModule } from './users/users.module';
 import { FilesModule } from './files/files.module';
 import { AuthModule } from './auth/auth.module';
@@ -49,6 +50,7 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
       ],
       envFilePath: ['.env'],
     }),
+    ScheduleModule.forRoot(),
     infrastructureDatabaseModule,
     I18nModule.forRootAsync({
       useFactory: (configService: ConfigService<AllConfigType>) => ({

@@ -23,7 +23,7 @@ export class NotificationsService {
 
   async findMany(
     queryDto: QueryNotificationDto,
-  ): Promise<{ data: Notification[]; total: number }> {
+  ): Promise<{ data: Notification[]; total: number; unreadCount: number }> {
     return await this.notificationRepository.findMany(queryDto);
   }
 

@@ -6,6 +6,7 @@ import { NotificationRelationalRepository } from './infrastructure/persistence/r
 import { NotificationEntity } from './infrastructure/persistence/relational/entities/notification.entity';
 import { NotificationRepository } from './infrastructure/persistence/notification.repository';
 import { ClientInactivityService } from './services/client-inactivity.service';
+import { NotificationScheduler } from './services/notification-scheduler.service';
 import { ClientEntity } from '../clients/infrastructure/persistence/relational/entities/client.entity';
 import { SessionEntity } from '../session/infrastructure/persistence/relational/entities/session.entity';
 import { UserClientEntity } from '../users/infrastructure/persistence/relational/entities/user-client.entity';
@@ -23,6 +24,7 @@ import { UserClientEntity } from '../users/infrastructure/persistence/relational
   providers: [
     NotificationsService,
     ClientInactivityService,
+    NotificationScheduler,
     {
       provide: NotificationRepository,
       useClass: NotificationRelationalRepository,
@@ -32,6 +34,7 @@ import { UserClientEntity } from '../users/infrastructure/persistence/relational
     NotificationsService,
     NotificationRepository,
     ClientInactivityService,
+    NotificationScheduler,
   ],
 })
 export class NotificationsModule {}

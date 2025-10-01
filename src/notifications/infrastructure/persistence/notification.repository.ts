@@ -10,7 +10,7 @@ export abstract class NotificationRepository {
     type?: string;
     page?: number;
     limit?: number;
-  }): Promise<{ data: Notification[]; total: number }>;
+  }): Promise<{ data: Notification[]; total: number; unreadCount: number }>;
   abstract findById(id: Notification['id']): Promise<Notification | null>;
   abstract update(
     id: Notification['id'],
