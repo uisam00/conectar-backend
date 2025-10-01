@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.0 (2025-10-01)
+
+- feat: implementar sistema de notificações ([89a97a6](https://github.com/uisam00/conectar-backend/commit/89a97a6))
+- feat: implementar sistema de notificações com cron job para clientes inativos ([64009b5](https://github.com/uisam00/conectar-backend/commit/64009b5))
+- Update introduction.md ([bcb6dbe](https://github.com/uisam00/conectar-backend/commit/bcb6dbe))
+- Update README.md ([1eecb48](https://github.com/uisam00/conectar-backend/commit/1eecb48))
+- docs: adiciona usuário de teste ([e526d13](https://github.com/uisam00/conectar-backend/commit/e526d13))
+- docs: corrige link demo ([73bb6d2](https://github.com/uisam00/conectar-backend/commit/73bb6d2))
+
 ## <small>1.4.1 (2025-09-29)</small>
 
 - fix(auth): remove variÃ¡vel nÃ£o utilizada no register ([e5e8a73](https://github.com/uisam00/conectar-backend/commit/e5e8a73))
