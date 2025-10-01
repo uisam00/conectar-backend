@@ -6,11 +6,11 @@ Api de teste prático.
 
 [Documentação completa aqui](/docs/readme.md)
 
-Demo Frontend: https://conectar-frontend-07mc.onrender.com
+Demo Frontend: http://conectar-frontend-xi.vercel.app
 
-API (Swagger): https://conectar-backend-t4fq.onrender.com/docs
+API (Swagger): https://conectar-api.wachannel.com.br/docs
 
-Repo Backend: https://github.com/uisam00/conectar-backend
+Repo Frontend: https://github.com/uisam00/conectar-frontend
 
 ## Usuário de teste
 
