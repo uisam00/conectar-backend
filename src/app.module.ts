@@ -24,6 +24,7 @@ import { HealthModule } from './health/health.module';
 import { PlansModule } from './plans/plans.module';
 import { ClientsModule } from './clients/clients.module';
 import { ClientRolesModule } from './client-roles/client-roles.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 // <database-block>
 const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
@@ -84,6 +85,7 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
     PlansModule,
     ClientsModule,
     ClientRolesModule,
+    NotificationsModule,
   ],
 })
 export class AppModule {}
